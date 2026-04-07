@@ -1191,6 +1191,21 @@ How to use Custom Antimatter Deck:
 
 ]]
 --
+local hundred = {
+	object_type = "Back",
+	dependencies = {
+		items = {
+			"set_cry_deck",
+		},
+	},
+	name = "cry-Hundred",
+	key = "hundred",
+	config = { joker_slot = 95, consumable_slot = 98 },
+	pos = { x = 0, y = 0 },
+	atlas = "atlasdeck",
+	unlocked = true,
+}
+
 local antimatter_custom = {
 	["b_red"] = true,
 	["b_blue"] = true,
@@ -1221,6 +1236,7 @@ return {
 		beige,
 		blank,
 		antimatter,
+		hundred,
 		e_deck,
 		et_deck,
 		sk_deck,
