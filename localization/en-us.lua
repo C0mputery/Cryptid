@@ -292,8 +292,8 @@ return {
 			b_cry_hundred = {
 				name = "Hundred Deck",
 				text = {
-					"{C:attention}+100{} Joker slots",
-					"{C:attention}+100{} Consumable slots",
+					"{C:attention}100{} Joker slots",
+					"{C:attention}100{} Consumable slots",
 				},
 			},
 		},
