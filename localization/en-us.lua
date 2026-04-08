@@ -299,7 +299,8 @@ return {
 			b_cry_gambler = {
 				name = "Gambler Deck",
 				text = {
-					"Gives a gambler tag after every boss blind",
+					"Start with an {C:attention}Empowered Tag{}",
+					"Boss blinds give a {C:attention}Gambler Tag{}",
 				},
 			},
 		},

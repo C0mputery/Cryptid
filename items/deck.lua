@@ -1217,6 +1217,15 @@ local gambler = {
     key = "gambler",
     pos = { x = 0, y = 0 },
     atlas = "atlasdeck",
+    apply = function(self)
+        G.E_MANAGER:add_event(Event({
+            func = function()
+                local tag = Tag("tag_cry_empowered")
+                add_tag(tag)
+                return true
+            end,
+        }))
+    end,
     unlocked = true,
     calculate = function(self, back, context)
         if context.context == "eval" and Cryptid.safe_get(G.GAME, "last_blind", "boss") then
