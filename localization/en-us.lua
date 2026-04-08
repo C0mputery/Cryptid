@@ -296,6 +296,12 @@ return {
 					"{C:attention}100{} Consumable slots",
 				},
 			},
+			b_cry_gambler = {
+				name = "Gambler Deck",
+				text = {
+					"Gives a gambler tag after every boss blind",
+				},
+			},
 		},
 		Blind = {
 			bl_cry_box = {

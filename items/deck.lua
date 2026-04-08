@@ -1206,6 +1206,28 @@ local hundred = {
 	unlocked = true,
 }
 
+local gambler = {
+    object_type = "Back",
+    dependencies = {
+        items = {
+            "set_cry_deck",
+        },
+    },
+    name = "cry-Gambler",
+    key = "gambler",
+    pos = { x = 0, y = 0 },
+    atlas = "atlasdeck",
+    unlocked = true,
+    calculate = function(self, back, context)
+        if context.context == "eval" and Cryptid.safe_get(G.GAME, "last_blind", "boss") then
+            local tag = Tag("tag_cry_gambler")
+            add_tag(tag)
+            tag:apply_to_run({ type = "new_blind_choice" })
+            return true
+        end
+    end
+}
+
 local antimatter_custom = {
 	["b_red"] = true,
 	["b_blue"] = true,
@@ -1237,6 +1259,7 @@ return {
 		blank,
 		antimatter,
 		hundred,
+		gambler,
 		e_deck,
 		et_deck,
 		sk_deck,
