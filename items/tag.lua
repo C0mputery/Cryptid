@@ -81,6 +81,61 @@ local epic_tag = {
 		end
 	end,
 }
+local epic2_tag = {
+	cry_credits = {
+		idea = {
+			"Jevonn",
+		},
+		art = {
+			"Math",
+		},
+		code = {
+			"Math",
+		},
+	},
+	object_type = "Tag",
+	dependencies = {
+		items = {
+			"set_cry_tag",
+			"set_cry_epic",
+		},
+	},
+	atlas = "tag_cry",
+	pos = { x = 3, y = 0 },
+	name = "cry-Epic2 Tag",
+	order = 1,
+	min_ante = 99,
+	requires = "j_cry_googol_play",
+	config = { type = "store_joker_create" },
+	key = "epic2",
+	apply = function(self, tag, context)
+		if context.type == "store_joker_create" then
+			local rares_in_posession = { 0 }
+			for k, v in ipairs(G.jokers.cards) do
+				if v.config.center.rarity == "cry_epic" and not rares_in_posession[v.config.center.key] then
+					rares_in_posession[1] = rares_in_posession[1] + 1
+					rares_in_posession[v.config.center.key] = true
+				end
+			end
+			local card
+			if #G.P_JOKER_RARITY_POOLS.cry_epic > rares_in_posession[1] then
+				card = create_card("Joker", context.area, nil, "cry_epic", nil, nil, nil, "cry_eta")
+				create_shop_card_ui(card, "Joker", context.area)
+				card.states.visible = false
+				tag:yep("+", G.C.RARITY.cry_epic, function()
+					card:start_materialize()
+					card.misprint_cost_fac = 0.0
+					card:set_cost()
+					return true
+				end)
+			else
+				tag:nope()
+			end
+			tag.triggered = true
+			return card
+		end
+	end,
+}
 local schematic = {
 	cry_credits = {
 		idea = {
@@ -1661,6 +1716,7 @@ local tagitems = {
 	booster,
 	better_voucher,
 	epic_tag,
+	epic2_tag,
 	glitched_tag,
 	oversat_tag,
 	mosaic_tag,

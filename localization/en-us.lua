@@ -303,6 +303,13 @@ return {
 					"Boss blinds give a {C:attention}Gambler Tag{}",
 				},
 			},
+			b_cry_epic = {
+				name = "Epic Deck",
+				text = {
+					"Start with an {C:attention}Epic Tag{}",
+					"Boss blinds give a {C:attention}Epic Tag{}",
+				},
+			},
 		},
 		Blind = {
 			bl_cry_box = {
@@ -3958,6 +3965,13 @@ return {
 				name = "Epic Tag",
 				text = {
 					"Shop has a half-price",
+					"{C:cry_epic}Epic Joker",
+				},
+			},
+			tag_cry_epic2 = {
+				name = "Epic Tag",
+				text = {
+					"Shop has a FREE",
 					"{C:cry_epic}Epic Joker",
 				},
 			},

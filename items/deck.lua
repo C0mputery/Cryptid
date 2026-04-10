@@ -1237,6 +1237,35 @@ local gambler = {
     end
 }
 
+local epic = {
+    object_type = "Back",
+    dependencies = {
+        items = {
+            "set_cry_deck",
+        },
+    },
+    name = "cry-Epic",
+    key = "epic",
+    pos = { x = 0, y = 0 },
+    atlas = "atlasdeck",
+    apply = function(self)
+        G.E_MANAGER:add_event(Event({
+            func = function()
+                local tag = Tag("tag_cry_epic2")
+                add_tag(tag)
+                return true
+            end,
+        }))
+    end,
+    unlocked = true,
+    calculate = function(self, back, context)
+        if context.context == "eval" and Cryptid.safe_get(G.GAME, "last_blind", "boss") then
+            add_tag(Tag("tag_cry_epic2"))
+            return true
+        end
+    end
+}
+
 local antimatter_custom = {
 	["b_red"] = true,
 	["b_blue"] = true,
@@ -1269,6 +1298,7 @@ return {
 		antimatter,
 		hundred,
 		gambler,
+		epic,
 		e_deck,
 		et_deck,
 		sk_deck,
