@@ -1384,11 +1384,13 @@ local summoning = {
 		}
 	end,
 	can_use = function(self, card)
-		return #G.jokers.cards <= G.jokers.config.card_limit
+		return #G.jokers.cards > 0
+			and #G.jokers.cards <= G.jokers.config.card_limit
 			--Prevent use if slots are full and all jokers are eternal (would exceed limit)
 			and #Cryptid.advanced_find_joker(nil, nil, nil, { "eternal" }, true, "j") < G.jokers.config.card_limit
 	end,
 	use = function(self, card, area, copier)
+		if #G.jokers.cards == 0 then return end
 		local used_consumable = copier or card
 		local deletable_jokers = {}
 		for k, v in pairs(G.jokers.cards) do
