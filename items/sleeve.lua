@@ -322,6 +322,20 @@ if CardSleeves then
 		attributes = { "joker", "code", "consumable" },
 	})
 
+	local pointersleeve = CardSleeves.Sleeve({
+		key = "pointer_sleeve",
+		name = "Pointer Sleeve",
+		atlas = "atlasnotjokers",
+		pos = { x = 11, y = 3 },
+		config = { consumables = { "c_cry_pointer" } },
+		unlocked = true,
+		unlock_condition = { deck = "Pointer Deck", stake = 1 },
+		loc_vars = function(self)
+			return { vars = {} }
+		end,
+		attributes = { "consumable", "spectral" },
+	})
+
 	local nostalgicsleeve = CardSleeves.Sleeve({
 		key = "beta_sleeve",
 		name = "Nostalgic Sleeve",
@@ -1877,6 +1891,7 @@ if CardSleeves then
 			glowingsleeve,
 			criticalsleeve,
 			encodedsleeve,
+			pointersleeve,
 			nostalgicsleeve,
 			bountifulsleeve,
 			beigesleeve,

@@ -1294,6 +1294,23 @@ local epic = {
     end
 }
 
+local pointerdeck = {
+	object_type = "Back",
+	dependencies = {
+		items = {
+			"set_cry_deck",
+			"c_cry_pointer",
+		},
+	},
+	name = "cry-PointerDeck",
+	key = "pointer",
+	config = { consumables = { "c_cry_pointer" } },
+	pos = { x = 11, y = 3 },
+	atlas = "atlasnotjokers",
+	unlocked = true,
+	attributes = { "consumable", "spectral" },
+}
+
 local antimatter_custom = {
 	["b_red"] = true,
 	["b_blue"] = true,
@@ -1327,6 +1344,7 @@ return {
 		hundred,
 		gambler,
 		epic,
+		pointerdeck,
 		e_deck,
 		et_deck,
 		sk_deck,

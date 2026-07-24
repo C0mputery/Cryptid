@@ -312,6 +312,12 @@ return {
 					"Boss blinds give a {C:attention}Epic Tag{}",
 				},
 			},
+			b_cry_pointer = {
+				name = "Pointer Deck",
+				text = {
+					"Start with {C:spectral,T:c_cry_pointer}POINTER://{}",
+				},
+			},
 		},
 		Blind = {
 			bl_cry_box = {
@@ -3473,6 +3479,12 @@ return {
 					"Start with a {C:cry_code,T:j_cry_CodeJoker}Code Joker{}",
 					"and a {C:cry_code,T:j_cry_copypaste}Copy/Paste{}",
 					"Only {C:cry_code}Code Cards{} appear in shop",
+				},
+			},
+			sleeve_cry_pointer_sleeve = {
+				name = "Pointer Sleeve",
+				text = {
+					"Start with {C:spectral,T:c_cry_pointer}POINTER://{}",
 				},
 			},
 			sleeve_cry_equilibrium_sleeve = {
