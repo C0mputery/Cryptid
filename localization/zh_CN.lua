@@ -1272,7 +1272,7 @@ return {
 				text = {
 					"相邻改变{C:chips}筹码{}的小丑",
 					"使用更高一级的{C:attention}运算符{}进行计分",
-					"{C:inactive}(最高为指数运算)",
+					"{C:inactive}(可超越指数，直至超运算及以上)",
 				},
 			},
 			j_cry_candy_basket = {

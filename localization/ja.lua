@@ -1303,7 +1303,7 @@ return {
 				text = {
 					"隣接する {C:chips}チップを{}操作するジョーカーは",
 					"次に上位の{C:attention}演算子{}を用いて計算される",
-					"{C:inactive}(累乗は変化しない)",
+					"{C:inactive}(テトレーション以降にもスケールする)",
 				},
 			},
 			j_cry_candy_basket = {

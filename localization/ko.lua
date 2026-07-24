@@ -1281,7 +1281,7 @@ return {
 					"인접한 {C:chips}칩{} 수정 조커가",
 					"점수 계산 시 다음으로 높은",
 					"{C:attention}연산자{}를 사용",
-					"{C:inactive}(지수 연산에서 멈춤)",
+					"{C:inactive}(테트레이션 이상으로 스케일)",
 				},
 			},
 			j_cry_candy_basket = {

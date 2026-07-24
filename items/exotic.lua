@@ -1521,21 +1521,15 @@ local caeruleum = {
 					if G.jokers.cards[i] == card then
 						for _, b in ipairs(card.ability.cry_caeruleum) do
 							local caeruleum = G.jokers.cards[i + (b and 1 or -1)]
-							local was_key_changed, new_key, op = Cryptid.caeruleum_new_key(key)
+							local was_key_changed, new_key, op, new_amount = Cryptid.caeruleum_new_key(key, amount)
 
 							-- change the key!
 							if was_key_changed then
 								key = new_key
+								amount = new_amount
 
 								-- no _mod returns because i hate them
 								effect.remove_default_message = (key:sub(-4) == "_mod")
-
-								-- create a new message for caeruleum to display
-								local chipsMessageKeys = {
-									"a_chips",
-									"a_xchips",
-									"a_powchips",
-								}
 
 								-- these get run through card_eval_status_text AFTER the normal calculate_individual_effect runs
 								caeruleum_messages[#caeruleum_messages + 1] = {
@@ -1545,13 +1539,7 @@ local caeruleum = {
 									percent,
 									nil,
 									{
-										message = localize({
-											type = "variable",
-											key = chipsMessageKeys[op],
-											vars = {
-												number_format(amount),
-											},
-										}),
+										message = Cryptid.caeruleum_chips_message(op, amount, key),
 										focus = caeruleum,
 										sound = "chips1",
 									},
@@ -1656,36 +1644,118 @@ local chipsOperators = {
 		},
 		operation = 2,
 	},
+	{
+		keys = {
+			"echips",
+			"e_chips",
+			"Echip_mod",
+		},
+		operation = 3,
+	},
+	{
+		keys = {
+			"eechips",
+			"ee_chips",
+			"EEchip_mod",
+		},
+		operation = 4,
+	},
+	{
+		keys = {
+			"eeechips",
+			"eee_chips",
+			"EEEchip_mod",
+		},
+		operation = 5,
+	},
+	{
+		keys = {
+			"hyperchips",
+			"hyper_chips",
+			"hyperchip_mod",
+		},
+		operation = 6,
+	},
 }
 
 local chipsReturnOperators = {
 	"chips",
 	"xchips",
 	"echips",
+	"eechips",
+	"eeechips",
+	"hyperchips",
 }
+
+local chipsMessageKeys = {
+	"a_chips",
+	"a_xchips",
+	"a_powchips",
+	"a_eechips",
+	"a_eeechips",
+}
+
+--- Formats Caeruleum's chips operator message for the given hyperoperation level.
+--- @param op integer The operator's position in the hyperoperation sequence.
+--- @param amount any The effect amount (number, or `{arrows, height}` for hyperchips).
+--- @param key string The effect key after upgrading.
+--- @return string
+function Cryptid.caeruleum_chips_message(op, amount, key)
+	local handler = Talisman and Talisman.effects and Talisman.effects.list and Talisman.effects.list[key]
+	if handler and handler.stringify then
+		return handler.stringify(amount)
+	end
+
+	if op >= 6 and type(amount) == "table" then
+		local arrows = (amount[1] or 0) <= 5 and string.rep("^", amount[1] or 0) or ("{" .. tostring(amount[1]) .. "}")
+		return arrows .. number_format(amount[2]) .. " Chips"
+	end
+
+	local message_key = chipsMessageKeys[op] or "a_powchips"
+	return localize({
+		type = "variable",
+		key = message_key,
+		vars = {
+			number_format(amount),
+		},
+	})
+end
 
 --- Handles Caeruleum's operator increase.
 --- @param key string The key being checked.
---- @return boolean was_key_changed Whether the key was actually changed.
+--- @param amount any The effect amount (number, or `{arrows, height}` for hyperchips).
+--- @return boolean was_key_changed Whether the key/amount was actually changed.
 --- @return string new_key The new key if it was changed, or old one if it wasn't.
---- @return integer? op The new operator's position in the hyperoperation sequence. `nil` if the key wasn't changed.\n(1 is addition, 2 is multiplication, 3 is exponentiation)
-function Cryptid.caeruleum_new_key(key)
+--- @return integer? op The new operator's position in the hyperoperation sequence. `nil` if the key wasn't changed.\n(1 is addition, 2 is multiplication, 3 is exponentiation, 4 is tetration, 5 is pentation, 6+ is hyperoperation)
+--- @return any new_amount The possibly transformed amount (hyperchips uses `{arrows, height}`).
+function Cryptid.caeruleum_new_key(key, amount)
 	if not SMODS.Calculation_Controls.chips or not key then
-		return false, key
+		return false, key, nil, amount
 	end
 
 	for _, op in ipairs(chipsOperators) do
 		for _, key2 in pairs(op.keys) do
 			if key == key2 then
-				local op2 = math.max(1, math.min(op.operation + 1, 3))
+				local max_op = #chipsReturnOperators
+				local op2 = math.max(1, math.min(op.operation + 1, max_op))
 				local new_key = chipsReturnOperators[op2]
+				local new_amount = amount
 
-				return true, new_key, op2
+				-- eeechips (^^^) upgrades into hyperchips; further Caeruleums raise the arrow count
+				if new_key == "hyperchips" then
+					if type(amount) == "table" then
+						new_amount = { (amount[1] or 0) + 1, amount[2] }
+					else
+						new_amount = { 4, amount }
+					end
+				end
+
+				return true, new_key, op2, new_amount
 			end
 		end
 	end
 
-	return false, key
+	return false, key, nil, amount
 end
 
 local items = {
