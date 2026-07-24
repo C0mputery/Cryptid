@@ -127,6 +127,7 @@ local lock = {
 	force_use = function(self, card, area)
 		self:use(card, area)
 	end,
+	attributes = { "joker", "modify_card", "sticker" },
 }
 local vacuum = {
 	cry_credits = {
@@ -219,6 +220,7 @@ local vacuum = {
 	force_use = function(self, card, area)
 		self:use(card, area)
 	end,
+	attributes = { "modify_card", "economy" },
 }
 local hammerspace = {
 	cry_credits = {
@@ -295,6 +297,7 @@ local hammerspace = {
 	force_use = function(self, card, area)
 		self:use(card, area)
 	end,
+	attributes = { "modify_card", "ccd" },
 }
 local trade = {
 	cry_credits = {
@@ -491,6 +494,7 @@ local trade = {
 			end
 			Card.apply_to_run(nil, G.P_CENTERS[center])
 		end
+		--[[
 		print(localize({
 			type = "variable",
 			key = "cry_trade_remove",
@@ -506,7 +510,9 @@ local trade = {
 			key = "cry_trade_add",
 			vars = { localize({ type = "name_text", set = "Voucher", key = loc_name[3] }) },
 		}))
+		]]
 	end,
+	attributes = { "voucher", "generation" },
 }
 local replica = {
 	cry_credits = {
@@ -592,6 +598,7 @@ local replica = {
 	force_use = function(self, card, area)
 		self:use(card, area)
 	end,
+	attributes = { "modify_card" },
 }
 local analog = {
 	cry_credits = {
@@ -667,12 +674,15 @@ local analog = {
 				end,
 			}))
 		end
-		ease_ante(math.min(card.ability.ante, card.ability.immutable.max_ante))
+		local ante_mod = math.min(card.ability.ante, card.ability.immutable.max_ante)
+		ease_ante(ante_mod)
+		G.GAME.round_resets.blind_ante = G.GAME.round_resets.ante
 	end,
 	demicoloncompat = true,
 	force_use = function(self, card, area)
 		self:use(card, area)
 	end,
+	attributes = { "ante", "generation", "joker", "destroy_card" },
 }
 local ritual = {
 	cry_credits = {
@@ -768,6 +778,7 @@ local ritual = {
 	force_use = function(self, card, area)
 		self:use(card, area)
 	end,
+	attributes = { "editions", "modify_card" },
 }
 local adversary = {
 	cry_credits = {
@@ -866,6 +877,7 @@ local adversary = {
 	force_use = function(self, card, area)
 		self:use(card, area)
 	end,
+	attributes = { "editions", "modify_card", "joker", "lose_economy" },
 }
 local chambered = {
 	cry_credits = {
@@ -940,6 +952,7 @@ local chambered = {
 	force_use = function(self, card, area)
 		self:use(card, area)
 	end,
+	attributes = { "consumable", "generation" },
 }
 local conduit = {
 	cry_credits = {
@@ -962,6 +975,7 @@ local conduit = {
 	order = 460,
 	atlas = "atlasnotjokers",
 	can_use = function(self, card)
+		--[[
 		local combinedTable = {}
 		dbl = false
 		no_dbl = false
@@ -988,6 +1002,9 @@ local conduit = {
 			end
 		end
 		return (#combinedTable == 2 and not (dbl and no_dbl))
+		]]
+		local cards = Cryptid.get_highlighted_cards({ G.hand, G.jokers }, card, 2, 2)
+		return #cards == 2
 	end,
 	use = function(self, card, area, copier)
 		local used_consumable = copier or card
@@ -1008,12 +1025,9 @@ local conduit = {
 			trigger = "after",
 			delay = 0.15,
 			func = function()
-				if not highlighted_1.edition or not highlighted_1.edition.cry_double_sided then
-					highlighted_1:flip()
-				end
-				if not highlighted_2.edition or not highlighted_2.edition.cry_double_sided then
-					highlighted_2:flip()
-				end
+				highlighted_1:flip()
+				highlighted_2:flip()
+				--[[
 				if highlighted_1.children.flip then
 					highlighted_1.children.flip:remove()
 					highlighted_1.children.flip = nil
@@ -1027,11 +1041,12 @@ local conduit = {
 					highlighted_2.children.flip:remove()
 					highlighted_2.children.flip = nil
 				end
-
+				
 				if highlighted_2.children.merge_ds then
 					highlighted_2.children.merge_ds:remove()
 					highlighted_2.children.merge_ds = nil
 				end
+				]]
 				play_sound("card1", percent)
 				highlighted_1:juice_up(0.3, 0.3)
 				highlighted_2:juice_up(0.3, 0.3)
@@ -1044,14 +1059,11 @@ local conduit = {
 			trigger = "after",
 			delay = 0.15,
 			func = function()
-				local one_edition = highlighted_1.edition
-				if not highlighted_1.edition or not highlighted_1.edition.cry_double_sided then
-					highlighted_1:flip()
-				end
-				highlighted_1:set_edition(highlighted_2.edition)
-				if not highlighted_2.edition or not highlighted_2.edition.cry_double_sided then
-					highlighted_2:flip()
-				end
+				local one_edition = (highlighted_1.edition or {}).key
+				local two_edition = (highlighted_2.edition or {}).key
+				highlighted_1:flip()
+				highlighted_1:set_edition(two_edition)
+				highlighted_2:flip()
 				highlighted_2:set_edition(one_edition)
 				play_sound("card1", percent)
 				highlighted_1:juice_up(0.3, 0.3)
@@ -1083,6 +1095,7 @@ local conduit = {
 	force_use = function(self, card, area)
 		self:use(card, area)
 	end,
+	attributes = { "modify_card", "editions" },
 }
 
 local white_hole = {
@@ -1132,7 +1145,8 @@ local white_hole = {
 		local removed_levels = 0
 		for k, v in ipairs(G.handlist) do
 			if to_big(G.GAME.hands[v].level) > to_big(1) then
-				local this_removed_levels = G.GAME.hands[v].level - 1
+				-- to_number vs tonumber lmao
+				local this_removed_levels = to_number((G.GAME.hands[v].level - 1))
 				if
 					-- Due to how these poker hands are loaded they still techically exist even if Poker Hand Stuff is disabled
 					-- Because they still exist, While Hole needs to ignore levels from these if disabled (via Black Hole, Planet.lua, etc...)
@@ -1142,7 +1156,6 @@ local white_hole = {
 					if v ~= _hand or not modest then
 						removed_levels = removed_levels + this_removed_levels
 						level_up_hand(used_consumable, v, true, -this_removed_levels)
-						G.GAME.hands[v].levels = 1
 					end
 				end
 			end
@@ -1208,6 +1221,7 @@ local white_hole = {
 	force_use = function(self, card, area)
 		self:use(card, area)
 	end,
+	attributes = { "hand_level", "hand_type", "space" },
 }
 
 local typhoon = {
@@ -1287,6 +1301,7 @@ local typhoon = {
 	force_use = function(self, card, area)
 		self:use(card, area)
 	end,
+	attributes = { "modify_card", "seals" },
 }
 
 local meld = {
@@ -1432,6 +1447,7 @@ local summoning = {
 	force_use = function(self, card, area)
 		self:use(card, area)
 	end,
+	attributes = { "rarity", "destroy_card", "generation", "joker" },
 }
 
 local spectrals = {
@@ -1445,7 +1461,7 @@ local spectrals = {
 	adversary,
 	chambered,
 	conduit,
-	meld,
+	--meld,
 	summoning, -- to be moved to epic.lua
 	typhoon, -- to be moved to misc.lua
 	white_hole,

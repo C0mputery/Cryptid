@@ -67,6 +67,7 @@ local pack1 = {
 	end,
 	group_key = "k_cry_program_pack",
 	cry_digital_hallucinations = code_digital_hallucinations_compat,
+	attributes = { "code", "consumable" },
 }
 -- Program Pack Alt, 1/2
 local pack2 = {
@@ -112,6 +113,7 @@ local pack2 = {
 	end,
 	group_key = "k_cry_program_pack",
 	cry_digital_hallucinations = code_digital_hallucinations_compat,
+	attributes = { "code", "consumable" },
 }
 -- Jumbo Program Pack, 1/4
 local packJ = {
@@ -157,6 +159,7 @@ local packJ = {
 	end,
 	group_key = "k_cry_program_pack",
 	cry_digital_hallucinations = code_digital_hallucinations_compat,
+	attributes = { "code", "consumable" },
 }
 -- Mega Program Pack, 2/4
 local packM = {
@@ -202,6 +205,7 @@ local packM = {
 	end,
 	group_key = "k_cry_program_pack",
 	cry_digital_hallucinations = code_digital_hallucinations_compat,
+	attributes = { "code", "consumable" },
 }
 -- Console Tag
 -- Gives a free Program Pack
@@ -264,6 +268,7 @@ local console = {
 			return true
 		end
 	end,
+	attributes = { "booster" },
 }
 -- ://Crash
 -- 1/6 to ACE, otherwise crash; determined by run seed rather than current seed
@@ -309,9 +314,6 @@ local crash = {
 	demicoloncompat = true,
 	force_use = function(self, card, area)
 		self:use(card, area)
-	end,
-	set_ability = function(self, center)
-		center.ability.cry_multiuse = math.ceil(1 + (G.GAME.extra_multiuse or 0))
 	end,
 	init = function(self)
 		function create_UIBox_crash(card)
@@ -956,9 +958,7 @@ local keygen = {
 	force_use = function(self, card, area)
 		self:use(card, area)
 	end,
-	set_ability = function(self, center)
-		center.ability.cry_multiuse = math.ceil(1 + (G.GAME.extra_multiuse or 0))
-	end,
+	attributes = { "voucher", "generation", "sticker" },
 }
 -- ://Payload
 -- Triple interest gained on next cash out, stacks exponentially (multiplicative on modest)
@@ -1008,9 +1008,7 @@ local payload = {
 	force_use = function(self, card, area)
 		self:use(card, area)
 	end,
-	set_ability = function(self, center)
-		center.ability.cry_multiuse = math.ceil(1 + (G.GAME.extra_multiuse or 0))
-	end,
+	attributes = { "economy" },
 }
 -- ://Exploit
 -- Choose a hand, next hand is forced to that hand regardless of cards played, +1 asc power for that hand, multi-use 2
@@ -1039,7 +1037,7 @@ local exploit = {
 	pos = { x = 8, y = 3 },
 	cost = 4,
 	order = 403,
-	config = { extra = { enteredhand = "" } }, -- i don't think this ever uses config...?
+	config = { cry_multiuse = 2, extra = { enteredhand = "" } }, -- i don't think this ever uses config...?
 	loc_vars = function(self, info_queue, card)
 		if G.STAGE == G.STAGES.RUN and Cryptid.enabled("set_cry_poker_hand_stuff") == true then
 			local modest = Cryptid.gameset(G.P_CENTERS.c_cry_sunplanet) == "modest"
@@ -1070,23 +1068,11 @@ local exploit = {
 	end,
 	use = function(self, card, area, copier)
 		-- Un-use the card (re-use code is in lib/misc.lua)
-		if not card.ability.cry_multiuse or to_big(card.ability.cry_multiuse) <= to_big(1) then
-			G.GAME.CODE_DESTROY_CARD = copy_card(card)
-			G.consumeables:emplace(G.GAME.CODE_DESTROY_CARD)
-			G.GAME.CODE_DESTROY_CARD.ability.cry_multiuse = nil
-		end
-		if card.ability.cry_multiuse then
-			card.ability.cry_multiuse = card.ability.cry_multiuse + 1
-		end
-
 		G.GAME.USING_CODE = true
 		G.GAME.USING_EXPLOIT = true
-		G.GAME.ACTIVE_CODE_CARD = G.GAME.CODE_DESTROY_CARD or card
 		G.FUNCS.overlay_menu({ definition = G.UIDEF.exploit_menu() })
 	end,
-	set_ability = function(self, center)
-		center.ability.cry_multiuse = math.ceil(2 + (G.GAME.extra_multiuse or 0))
-	end,
+	attributes = { "asc_power", "hand_type" },
 }
 -- ://Malware
 -- Apply Glitched edition to held in hand cards
@@ -1165,9 +1151,7 @@ local malware = {
 	force_use = function(self, card, area)
 		self:use(card, area)
 	end,
-	set_ability = function(self, center)
-		center.ability.cry_multiuse = math.ceil(1 + (G.GAME.extra_multiuse or 0))
-	end,
+	attributes = { "modify_card", "edition" },
 }
 -- ://NPERROR
 -- Add last played hand back to your hand, multi-use 2
@@ -1196,6 +1180,7 @@ local crynperror = {
 	cost = 4,
 	atlas = "atlasnotjokers",
 	order = 405,
+	config = { cry_multiuse = 2 },
 	can_use = function(self, card)
 		return G.GAME.last_hand_played_cards
 			and (Cryptid.safe_get(G.GAME, "blind", "in_blind") and not G.GAME.USING_RUN) -- TODO: work in boosters
@@ -1223,9 +1208,6 @@ local crynperror = {
 	demicoloncompat = true,
 	force_use = function(self, card, area)
 		self:use(card, area)
-	end,
-	set_ability = function(self, center)
-		center.ability.cry_multiuse = math.ceil(2 + (G.GAME.extra_multiuse or 0))
 	end,
 }
 -- ://Rework
@@ -1313,9 +1295,7 @@ local rework = {
 	force_use = function(self, card, area)
 		self:use(card, area)
 	end,
-	set_ability = function(self, center)
-		center.ability.cry_multiuse = math.ceil(1 + (G.GAME.extra_multiuse or 0))
-	end,
+	attributes = { "destroy_card", "tag", "generation", "edition", "joker" },
 }
 -- Rework Tag
 -- Upgraded edition refers to the next edition along in the collection; base -> foil -> holo -> poly -> negative -> etc
@@ -1394,6 +1374,7 @@ local rework_tag = {
 	in_pool = function()
 		return false
 	end,
+	attributes = { "generation", "edition", "joker", "shop" },
 }
 -- ://Merge
 -- Merges a selected consumable and playing card, destroying the consumable and turning the playing card into a CCD of that consumable
@@ -1500,9 +1481,7 @@ local merge = {
 	force_use = function(self, card, area)
 		self:use(card, area)
 	end,
-	set_ability = function(self, center)
-		center.ability.cry_multiuse = math.ceil(1 + (G.GAME.extra_multiuse or 0))
-	end,
+	attributes = { "consumable", "modify_card", "ccd" },
 }
 -- ://Commit
 -- Destroys a selected joker and creates a different joker of the same rarity
@@ -1588,9 +1567,7 @@ local commit = {
 	force_use = function(self, card, area)
 		self:use(card, area)
 	end,
-	set_ability = function(self, center)
-		center.ability.cry_multiuse = math.ceil(1 + (G.GAME.extra_multiuse or 0))
-	end,
+	attributes = { "destroy_card", "generation", "joker", "rarity" },
 }
 -- ://MACHINECODE
 -- Creates a random Glitched consumable
@@ -1866,9 +1843,7 @@ local machinecode = {
 	force_use = function(self, card, area)
 		self:use(card, area)
 	end,
-	set_ability = function(self, center)
-		center.ability.cry_multiuse = math.ceil(1 + (G.GAME.extra_multiuse or 0))
-	end,
+	attributes = { "generation", "consumable" },
 }
 -- ://Spaghetti
 -- Creates a random Glitched food joker
@@ -1916,9 +1891,7 @@ local spaghetti = {
 	force_use = function(self, card, area)
 		self:use(card, area)
 	end,
-	set_ability = function(self, center)
-		center.ability.cry_multiuse = math.ceil(1 + (G.GAME.extra_multiuse or 0))
-	end,
+	attributes = { "generation", "joker" },
 }
 -- ://Seed
 -- Gives any card Rigged
@@ -1978,9 +1951,7 @@ local seed = {
 	force_use = function(self, card, area)
 		self:use(card, area)
 	end,
-	set_ability = function(self, center)
-		center.ability.cry_multiuse = math.ceil(1 + (G.GAME.extra_multiuse or 0))
-	end,
+	attributes = { "modify_card", "sticker", "mod_chance" },
 }
 -- Rigged sticker, guarantees listed odds (most of the time)
 local rigged = {
@@ -2142,9 +2113,6 @@ local patch = {
 	force_use = function(self, card, area)
 		self:use(card, area)
 	end,
-	set_ability = function(self, center)
-		center.ability.cry_multiuse = math.ceil(1 + (G.GAME.extra_multiuse or 0))
-	end,
 }
 -- ://Update, TBD, missing art
 local cryupdate = {
@@ -2269,9 +2237,7 @@ local hook = {
 	force_use = function(self, card, area)
 		self:use(card, area)
 	end,
-	set_ability = function(self, center)
-		center.ability.cry_multiuse = math.ceil(1 + (G.GAME.extra_multiuse or 0))
-	end,
+	attributes = { "joker", "modify_card", "forcetrigger" },
 }
 -- Hooked Sticker
 -- When a joker is naturally triggered, Force-Trigger the hooked joker
@@ -2323,9 +2289,16 @@ local hooked = {
 		then
 			for i = 1, #G.jokers.cards do
 				if G.jokers.cards[i].sort_id == card.ability.cry_hook_id then
-					local results = Cryptid.forcetrigger(G.jokers.cards[i], context)
-					if results and results.jokers then
-						return results.jokers
+					if not Spectrallib then
+						local results = Cryptid.forcetrigger(G.jokers.cards[i], context)
+						if results and results.jokers then
+							return results.jokers
+						end
+					else
+						Spectrallib.forcetrigger({
+							card = G.jokers.cards[i],
+							context = context,
+						})
 					end
 				end
 			end
@@ -2384,9 +2357,7 @@ local oboe = {
 	force_use = function(self, card, area)
 		self:use(card, area)
 	end,
-	set_ability = function(self, center)
-		center.ability.cry_multiuse = math.ceil(1 + (G.GAME.extra_multiuse or 0))
-	end,
+	attributes = { "booster" },
 }
 -- ://Assemble
 -- Add the number of jokers to selected hand's +mult
@@ -2400,6 +2371,7 @@ local assemble = {
 		},
 		code = {
 			"Nova",
+			"Eris",
 		},
 	},
 	dependencies = {
@@ -2416,62 +2388,65 @@ local assemble = {
 	atlas = "atlasnotjokers",
 	order = 416,
 	can_use = function(self, card)
-		local aaa = 0
-		if Cryptid.enabled("set_cry_poker_hand_stuff") == true and G.PROFILES[G.SETTINGS.profile].cry_none then
-			aaa = -1
-		end
-		local cards = Cryptid.get_highlighted_cards({ G.hand }, card, aaa + 1, 999)
-		return (#cards > aaa and #G.jokers.cards > 1)
+		local min = (G.PROFILES[G.SETTINGS.profile].cry_none and 0 or 1)
+		local hand = Cryptid.get_highlighted_cards({ G.hand }, nil, min, G.hand.config.highlighted_limit)
+		return #hand >= min and #G.jokers.cards > 0
 	end,
 	use = function(self, card, area, copier)
-		local upgrade_hand
-		local num = 0
-		if G.PROFILES[G.SETTINGS.profile].cry_none then
-			num = -1
+		local min = (G.PROFILES[G.SETTINGS.profile].cry_none and 0 or 1)
+		local hand = Cryptid.get_highlighted_cards({ G.hand }, nil, min, G.hand.config.highlighted_limit)
+		local hand_type
+		if #hand >= min then
+			hand_type = G.GAME.hands[G.FUNCS.get_poker_hand_info(hand)] or G.GAME.hands.cry_None
 		end
-		local hand = Cryptid.get_highlighted_cards({ G.hand }, card, num + 1, G.hand.config.highlighted_limit)
-		if #hand > num and not G.cry_force_use then
-			upgrade_hand = G.GAME.hands[G.FUNCS.get_poker_hand_info(hand)]
-		else
+		if hand_type then
+			SMODS.upgrade_poker_hands({
+				amount = 0,
+				hands = hand_type.key,
+				from = card,
+				parameters = { "mult" },
+				func = function(base, hand, param)
+					return base + #G.jokers.cards
+				end,
+			})
 			G.E_MANAGER:add_event(Event({
-				trigger = "after",
-				func = function()
-					local text = G.FUNCS.get_poker_hand_info(G.play.cards)
-					upgrade_hand = G.GAME.hands[text]
-						or (G.PROFILES[G.SETTINGS.profile].cry_none and G.GAME.hands["cry_None"])
-					upgrade_hand.mult = upgrade_hand.mult + #G.jokers.cards
+				func = function(n)
+					G.hand:unhighlight_all()
 					return true
 				end,
 			}))
 		end
-		if upgrade_hand then
-			upgrade_hand.mult = upgrade_hand.mult + #G.jokers.cards
-			G.hand:unhighlight_all()
-		end
 	end,
 	bulk_use = function(self, card, area, copier, number)
-		local upgrade_hand
-		local num = 0
-		if G.PROFILES[G.SETTINGS.profile].cry_none then
-			num = -1
+		local min = (G.PROFILES[G.SETTINGS.profile].cry_none and 0 or 1)
+		local hand = Cryptid.get_highlighted_cards({ G.hand }, nil, min, G.hand.config.highlighted_limit)
+		local hand_type
+		if #hand >= min then
+			hand_type = G.GAME.hands[G.FUNCS.get_poker_hand_info(G.hand.highlighted)] or G.GAME.hands.cry_None
 		end
-		if #G.hand.highlighted > num then
-			upgrade_hand = G.GAME.hands[G.FUNCS.get_poker_hand_info(G.hand.highlighted)]
-		elseif #G.play.cards > num then
-			upgrade_hand = G.GAME.hands[G.FUNCS.get_poker_hand_info(G.play.cards)]
-		end
-		if upgrade_hand then
-			upgrade_hand.mult = upgrade_hand.mult + #G.jokers.cards * number
-			G.hand:unhighlight_all()
+		if hand_type then
+			SMODS.upgrade_poker_hands({
+				amount = 0,
+				hands = hand_type.key,
+				from = card,
+				parameters = { "mult" },
+				func = function(base, hand, param)
+					return base + (#G.jokers.cards * number)
+				end,
+			})
+			G.E_MANAGER:add_event(Event({
+				func = function(n)
+					G.hand:unhighlight_all()
+					return true
+				end,
+			}))
 		end
 	end,
 	demicoloncompat = true,
 	force_use = function(self, card, area)
 		self:use(card, area)
 	end,
-	set_ability = function(self, center)
-		center.ability.cry_multiuse = math.ceil(1 + (G.GAME.extra_multiuse or 0))
-	end,
+	attributes = { "joker" },
 }
 -- ://Instantiate
 -- Draw 2 cards; one with selected card's rank and the other with selected card's suit (if possible)
@@ -2551,9 +2526,7 @@ local inst = {
 	force_use = function(self, card, area)
 		self:use(card, area)
 	end,
-	set_ability = function(self, center)
-		center.ability.cry_multiuse = math.ceil(1 + (G.GAME.extra_multiuse or 0))
-	end,
+	attributes = { "rank", "suit" },
 }
 -- ://Revert
 -- Loads the game state from the end of the last boss blind, at cash out
@@ -2625,9 +2598,6 @@ local revert = {
 	force_use = function(self, card, area)
 		self:use(card, area)
 	end,
-	set_ability = function(self, center)
-		center.ability.cry_multiuse = math.ceil(1 + (G.GAME.extra_multiuse or 0))
-	end,
 }
 -- Function://
 -- Saves the last 3 consumables used on first use, every use thereafter creates a copy of all 3 of those
@@ -2641,6 +2611,7 @@ local cryfunction = {
 		},
 		code = {
 			"Nova",
+			"Eris",
 		},
 	},
 	dependencies = {
@@ -2657,7 +2628,7 @@ local cryfunction = {
 	cost = 4,
 	order = 419,
 	loc_vars = function(self, info_queue, card)
-		lclze = function(index)
+		local lclze = function(index)
 			local func_card = (G.GAME.cry_function_cards or G.GAME.cry_last_used_consumeables)[index]
 			if not func_card then
 				return "None"
@@ -2684,65 +2655,46 @@ local cryfunction = {
 		}
 	end,
 	can_use = function(self, card)
-		return true
+		if type(G.GAME.cry_function_cards) == "table" and next(G.GAME.cry_function_cards) then
+			return #G.consumeables.cards <= G.consumeables.config.card_limit
+		else
+			return #G.GAME.cry_last_used_consumeables >= 3
+		end
 	end,
 	use = function(self, card, area, copier)
-		if #G.consumeables.cards < G.consumeables.config.card_limit then
-			if not G.GAME.cry_function_cards and #G.GAME.cry_last_used_consumeables == 0 then
-				G.E_MANAGER:add_event(Event({
-					func = function()
-						local new_card = create_card(
-							"Code",
-							G.consumeables,
-							nil,
-							nil,
-							nil,
-							nil,
-							"c_cry_cryfunction",
-							"cry_cryfunction"
-						)
-						new_card:add_to_deck()
-						G.consumeables:emplace(new_card)
-						G.GAME.consumeable_buffer = 0
-						return true
-					end,
-				}))
-			elseif not G.GAME.cry_function_cards then
-				G.GAME.cry_function_cards = {}
-				for i = 1, #G.GAME.cry_function_stupid_workaround do
-					G.GAME.cry_function_cards[i] = G.GAME.cry_function_stupid_workaround[i]
-				end
-			else
-				G.E_MANAGER:add_event(Event({
-					func = function()
-						local new_card = create_card(
-							"Consumeables",
-							G.consumeables,
-							nil,
-							nil,
-							nil,
-							nil,
-							G.GAME.cry_function_cards[1],
-							"cry_cryfunction"
-						)
-						new_card:add_to_deck()
-						new_card.ability.cry_function_sticker = true
-						new_card.ability.cry_function_counter = 1
-						G.consumeables:emplace(new_card)
-						G.GAME.consumeable_buffer = 0
-						return true
-					end,
-				}))
+		if not G.GAME.cry_function_cards then
+			G.GAME.cry_function_cards = {}
+			for i = 1, #G.GAME.cry_function_stupid_workaround do
+				G.GAME.cry_function_cards[i] = G.GAME.cry_function_stupid_workaround[i]
 			end
+		else
+			G.E_MANAGER:add_event(Event({
+				func = function()
+					local new_card = create_card(
+						"Consumeables",
+						G.consumeables,
+						nil,
+						nil,
+						nil,
+						nil,
+						G.GAME.cry_function_cards[1],
+						"cry_cryfunction"
+					)
+					new_card:add_to_deck()
+					new_card.ability.cry_function_sticker = true
+					new_card.ability.cry_function_counter = 1
+					G.consumeables:emplace(new_card)
+					G.GAME.consumeable_buffer = 0
+					return true
+				end,
+			}))
 		end
 	end,
 	demicoloncompat = true,
 	force_use = function(self, card, area)
 		self:use(card, area)
 	end,
-	set_ability = function(self, center)
-		center.ability.cry_multiuse = math.ceil(1 + (G.GAME.extra_multiuse or 0))
-	end,
+	attributes = { "generation", "consumable", "sticker" },
 }
 -- Function:// Sticker
 -- When used, creates the next saved Function:// card
@@ -2778,31 +2730,54 @@ local function_sticker = {
 	-- 	}
 	-- end,
 	loc_vars = function(self, info_queue, card)
-		lclze = function(index)
-			local func_card = (G.GAME.cry_function_cards or G.GAME.cry_last_used_consumeables)[index]
+		local lclze = function(index)
+			local func_card = (G.GAME.cry_function_cards or {})[index]
 			if not func_card then
-				return "None"
+				return card.area and card.area.config.collection and localize("k_none") or "???"
+			else
+				return localize({ type = "name_text", set = G.P_CENTERS[func_card].set, key = func_card })
 			end
-			for _, group in pairs(G.localization.descriptions) do
-				if _ ~= "Back" then
-					for key, card in pairs(group) do
-						if key == func_card then
-							return card.name
-						end
-					end
-				end
-			end
-			return "None"
 		end
+		local ind = card.ability.cry_function_counter
 		return {
 			key = "cry_function_sticker",
 			set = "Other",
 			vars = {
-				lclze(1),
-				lclze(2),
-				lclze(3),
+				lclze(ind and ind + 1 or nil),
 			},
 		}
+	end,
+	init = function(self)
+		local use_ref = G.FUNCS.use_card
+		function G.FUNCS.use_card(e, mute, nosave)
+			local card = e.config.ref_table
+			use_ref(e, mute, nosave)
+			if card.ability and card.ability.cry_function_sticker then
+				local c = card.ability.cry_function_counter
+				local key = nil
+				if c then
+					key = G.GAME.cry_function_cards and G.GAME.cry_function_cards[c + 1] or nil
+				end
+				G.E_MANAGER:add_event(Event({
+					func = function(n)
+						local card = SMODS.add_card({
+							key = key,
+							set = "Consumeables",
+							key_append = "cry_cryfunction",
+							area = G.consumeables,
+						})
+						if c and c < 2 then
+							card.ability.cry_function_sticker = true
+							card.ability.cry_function_counter = c + 1
+						else --I DEFY YOU, STICKER DECK!
+							card.ability.cry_function_sticker = nil
+							card.ability.cry_function_counter = nil
+						end
+						return true
+					end,
+				}))
+			end
+		end
 	end,
 }
 -- ://Run
@@ -2922,9 +2897,7 @@ local run = {
 	force_use = function(self, card, area)
 		self:use(card, area)
 	end,
-	set_ability = function(self, center)
-		center.ability.cry_multiuse = math.ceil(1 + (G.GAME.extra_multiuse or 0))
-	end,
+	attributes = { "shop" },
 }
 
 -- ://Declare
@@ -3067,7 +3040,7 @@ local declare = {
 			})
 			return t
 		end
-		G.FUNCS.declare_cancel = function()
+		G.FUNCS.declare_cancel = function(e) --check if e exists to see if it was actually called from the button... wanted to use this to not use the consumable when cancelling but idk how :<
 			if G.CHOOSE_CARD then
 				G.CHOOSE_CARD:remove()
 			end
@@ -3075,18 +3048,18 @@ local declare = {
 			G.GAME.USING_DECLARE = false
 		end
 		G.FUNCS.declare_apply = function()
-			G.GAME.hands["cry_Declare" .. tostring(G.GAME.DECLARE_USED or 0)] =
-				Cryptid.create_declare_hand(G.hand.highlighted, G.ENTERED_CARD)
+			local hand = G.GAME.hands["cry_Declare" .. tostring(G.GAME.DECLARE_USED or 0)]
+			Cryptid.create_declare_hand(G.hand.highlighted, G.ENTERED_CARD, nil, hand)
 			G.GAME.DECLARE_USED = (G.GAME.DECLARE_USED or 0) + 1
 			G.FUNCS.declare_cancel()
 		end
 		G.FUNCS.declare_apply_suitless = function()
-			G.GAME.hands["cry_Declare" .. tostring(G.GAME.DECLARE_USED or 0)] =
-				Cryptid.create_declare_hand(G.hand.highlighted, G.ENTERED_CARD, true)
+			local hand = G.GAME.hands["cry_Declare" .. tostring(G.GAME.DECLARE_USED or 0)]
+			Cryptid.create_declare_hand(G.hand.highlighted, G.ENTERED_CARD, true, hand)
 			G.GAME.DECLARE_USED = (G.GAME.DECLARE_USED or 0) + 1
 			G.FUNCS.declare_cancel()
 		end
-		Cryptid.create_declare_hand = function(cards, name, suitless)
+		Cryptid.create_declare_hand = function(cards, name, suitless, hand)
 			if G.ENTERED_CARD == "" then
 				G.ENTERED_CARD = "cry_Declare" .. tostring(G.GAME.DECLARE_USED or 0)
 			end
@@ -3123,27 +3096,22 @@ local declare = {
 			for i, v in pairs(G.GAME.hands) do
 				v.order = (v.order or 0) + 1
 			end
-			return {
-				order = 1,
-				l_mult = l_mult,
-				l_chips = l_chips,
-				mult = mult,
-				chips = chips,
-				example = Cryptid.create_declare_example(cards, suitless),
-				visible = true,
-				played = 0,
-				_saved_d_v = true,
-				played_this_round = 0,
-				played_this_ante = 0,
-				s_mult = mult,
-				s_chips = chips,
-				from_declare = true,
-				declare_cards = declare_cards,
-				declare_name = G.ENTERED_CARD,
-				level = 1,
-				index = G.GAME.DECLARE_USED or 0,
-				suitless = suitless,
-			}
+			--avoid overriding the entire hand table for literally no reason
+			hand.order = 1
+			hand.l_mult = l_mult
+			hand.l_chips = l_chips
+			hand.mult = mult
+			hand.s_mult = mult
+			hand.chips = chips
+			hand.s_chips = chips
+			hand.example = Cryptid.create_declare_example(cards, suitless)
+			hand.visible = true
+			hand.from_declare = true
+			hand.declare_cards = declare_cards
+			hand.declare_name = G.ENTERED_CARD
+			hand.level = 1
+			hand.index = G.GAME.DECLARE_USED or 0
+			hand.suitless = suitless
 		end
 		local localize_ref = localize
 		function localize(first, second, ...)
@@ -3192,9 +3160,7 @@ local declare = {
 			return c
 		end
 	end,
-	set_ability = function(self, center)
-		center.ability.cry_multiuse = math.ceil(1 + (G.GAME.extra_multiuse or 0))
-	end,
+	attributes = { "hand_type" }, -- i guess?????????????????
 }
 
 -- ://Class
@@ -3317,25 +3283,23 @@ local class = {
 	force_use = function(self, card, area)
 		G.CODE_MAX_HIGHLIGHT = card.ability.max_highlighted
 		local choices = {
-			"bonus",
-			"mult",
-			"wild",
-			"glass",
-			"steel",
-			"stone",
-			"gold",
-			"lucky",
-			"echo",
-			"light",
-			"abstract",
+			"m_bonus",
+			"m_mult",
+			"m_wild",
+			"m_glass",
+			"m_steel",
+			"m_stone",
+			"m_gold",
+			"m_lucky",
+			"m_cry_echo",
+			"m_cry_light",
+			"m_cry_abstract",
 		}
 		for i, v in pairs(Cryptid.get_highlighted_cards({ G.hand }, {}, 1, card.ability.max_highlighted or 1)) do
 			v:set_ability(pseudorandom_element(choices, pseudoseed("forceclass")))
 		end
 	end,
-	set_ability = function(self, center)
-		center.ability.cry_multiuse = math.ceil(1 + (G.GAME.extra_multiuse or 0))
-	end,
+	attributes = { "enhancement", "modify_card" },
 }
 -- ://Global
 -- Gives a selected card the Global sticker
@@ -3385,9 +3349,7 @@ local global = {
 	force_use = function(self, card, area)
 		self:use(card, area)
 	end,
-	set_ability = function(self, center)
-		center.ability.cry_multiuse = math.ceil(1 + (G.GAME.extra_multiuse or 0))
-	end,
+	attributes = { "modify_card", "sticker" },
 }
 -- Global sticker
 -- Always drawn on blind start or when booster pack opened
@@ -3573,9 +3535,7 @@ local variable = {
 			SMODS.change_base(v, v.base.suit, pseudorandom_element(choices, pseudoseed("forcevariable")))
 		end
 	end,
-	set_ability = function(self, center)
-		center.ability.cry_multiuse = math.ceil(1 + (G.GAME.extra_multiuse or 0))
-	end,
+	attributes = { "modify_card", "rank" },
 }
 -- ://Log
 -- View one of:
@@ -3889,9 +3849,7 @@ local log = {
 			G.GAME.USING_CODE = false
 		end
 	end,
-	set_ability = function(self, center)
-		center.ability.cry_multiuse = math.ceil(1 + (G.GAME.extra_multiuse or 0))
-	end,
+	attributes = { "shop" }, --reveals shop cards
 	-- bulk_use = function(self, card, area, copier, number)
 
 	-- end,
@@ -4052,6 +4010,7 @@ local quantify = {
 						if to_big(G.GAME.dollars - G.GAME.bankrupt_at) < to_big(highlighted.cost) then
 							return
 						end
+						highlighted:add_to_deck(nil, false)
 						ease_dollars(-highlighted.cost)
 						highlighted.children.price:remove()
 					end
@@ -4074,9 +4033,7 @@ local quantify = {
 			end
 		end
 	end,
-	set_ability = function(self, center)
-		center.ability.cry_multiuse = math.ceil(1 + (G.GAME.extra_multiuse or 0))
-	end,
+	attributes = { "joker_slot" }, --adds something to said joker slots
 }
 -- ://Divide,
 -- Halves item costs in shop
@@ -4143,9 +4100,7 @@ local divide = {
 			c:set_cost()
 		end
 	end,
-	set_ability = function(self, center)
-		center.ability.cry_multiuse = math.ceil(1 + (G.GAME.extra_multiuse or 0))
-	end,
+	attributes = { "economy" },
 }
 -- ://Multiply
 -- Doubles a joker's values until the end of the round (exponentially)
@@ -4208,9 +4163,7 @@ local multiply = {
 	force_use = function(self, card, area)
 		self:use(card, area)
 	end,
-	set_ability = function(self, center)
-		center.ability.cry_multiuse = math.ceil(1 + (G.GAME.extra_multiuse or 0))
-	end,
+	attributes = { "modify_card", "value_manip", "joker" },
 }
 
 -- ://Delete
@@ -4241,42 +4194,28 @@ local delete = {
 	order = 428,
 	pos = { x = 11, y = 2 },
 	cost = 4,
-	loc_vars = function(self, info_queue, card)
-		return { vars = { Cryptid.safe_get(card, "ability", "cry_multiuse") or self.config.cry_multiuse } }
-	end,
+	config = { cry_multiuse = 3 },
 	can_use = function(self, card)
-		return G.STATE == G.STATES.SHOP
-			and card.area == (G.GAME.modifiers.cry_beta and G.jokers or G.consumeables)
-			and #G.shop_jokers.highlighted + #G.shop_booster.highlighted + #G.shop_vouchers.highlighted == 1
-			and (G.shop_jokers.highlighted[1] ~= card and not Cryptid.safe_get(
-				G,
-				"shop_jokers",
-				"highlighted",
-				1,
-				"ability",
-				"eternal"
-			))
-			and (G.shop_booster.highlighted[1] ~= card and not Cryptid.safe_get(
-				G,
-				"shop_booster",
-				"highlighted",
-				1,
-				"ability",
-				"eternal"
-			))
-			and (
-				G.shop_vouchers.highlighted[1] ~= card
-				and not Cryptid.safe_get(G, "shop_vouchers", "highlighted", 1, "ability", "eternal")
-			)
+		local blacklist = function(c)
+			return not SMODS.is_eternal(c, card)
+		end
+		local cards =
+			Cryptid.get_highlighted_cards({ G.shop_jokers, G.shop_booster, G.shop_vouchers }, card, 1, 1, blacklist)
+		return #cards == 1
 	end,
 	use = function(self, card, area, copier)
 		if not G.GAME.cry_banned_pcards then
 			G.GAME.cry_banned_pcards = {}
 		end
 
-		local c = G.shop_jokers.highlighted[1] or G.shop_booster.highlighted[1] or G.shop_vouchers.highlighted[1]
+		local blacklist = function(c)
+			return not SMODS.is_eternal(c, card)
+		end
+		local cards =
+			Cryptid.get_highlighted_cards({ G.shop_jokers, G.shop_booster, G.shop_vouchers }, card, 1, 1, blacklist)
+		local c = cards[1]
 
-		if G.shop_vouchers.highlighted[1] and c.shop_voucher then
+		if c.area == G.shop_vouchers then
 			G.GAME.current_round.voucher.spawn[c.config.center.key] = nil
 			G.GAME.current_round.cry_voucher_edition = nil
 			G.GAME.current_round.cry_voucher_stickers =
@@ -4299,9 +4238,7 @@ local delete = {
 		end
 		c:start_dissolve()
 	end,
-	set_ability = function(self, center)
-		center.ability.cry_multiuse = math.ceil(3 + (G.GAME.extra_multiuse or 0))
-	end,
+	attributes = { "shop", "destroy_card", "banish" },
 }
 -- ://Alt-Tab
 -- Creates the current blind's Tag
@@ -4335,7 +4272,10 @@ local alttab = {
 	loc_vars = function(self, info_queue, card)
 		local ret = localize("k_none")
 		if Cryptid.safe_get(G.GAME, "blind", "in_blind") then
-			if G.GAME.blind:get_type() == "Small" then
+			local tag = Cryptid.get_next_tag()
+			if tag then
+				ret = localize({ type = "name_text", key = tag, set = "Tag" })
+			elseif G.GAME.blind:get_type() == "Small" then
 				ret = localize({ type = "name_text", key = G.GAME.round_resets.blind_tags.Small, set = "Tag" })
 			elseif G.GAME.blind:get_type() == "Big" then
 				ret = localize({ type = "name_text", key = G.GAME.round_resets.blind_tags.Big, set = "Tag" })
@@ -4343,16 +4283,15 @@ local alttab = {
 				ret = "???"
 			end
 		end
-		local tag = Cryptid.get_next_tag()
-		if tag then
-			ret = localize({ type = "name_text", key = tag, set = "Tag" })
-		end
 		return { vars = { ret } }
 	end,
 	can_use = function(self, card)
 		return Cryptid.safe_get(G.GAME, "blind", "in_blind")
 	end,
 	use = function(self, card, area, copier)
+		if not Cryptid.safe_get(G.GAME, "blind", "in_blind") then
+			return
+		end
 		local used_consumable = copier or card
 		delay(0.4)
 		G.E_MANAGER:add_event(Event({
@@ -4363,7 +4302,7 @@ local alttab = {
 				local tag = nil
 				local type = G.GAME.blind:get_type()
 				local tag_key = Cryptid.get_next_tag()
-				if tag_Key then
+				if tag_key then
 					tag = Tag(tag_key)
 				elseif type == "Boss" then
 					tag = Tag(get_next_tag_key())
@@ -4409,9 +4348,7 @@ local alttab = {
 	force_use = function(self, card, area)
 		self:use(card, area)
 	end,
-	set_ability = function(self, center)
-		center.ability.cry_multiuse = math.ceil(1 + (G.GAME.extra_multiuse or 0))
-	end,
+	attributes = { "tag", "generation" },
 }
 -- ://Ctrl-V
 -- Creates a copy of a selected playing card or consumable
@@ -4571,9 +4508,7 @@ local ctrl_v = {
 	force_use = function(self, card, area)
 		self:use(card, area)
 	end,
-	set_ability = function(self, center)
-		center.ability.cry_multiuse = math.ceil(1 + (G.GAME.extra_multiuse or 0))
-	end,
+	attributes = { "generation", "consumable" },
 }
 -- ://Reboot
 -- Shuffle all cards into deck, then reset Hands and Discards to default values
@@ -4633,9 +4568,6 @@ local reboot = {
 	force_use = function(self, card, area)
 		self:use(card, area)
 	end,
-	set_ability = function(self, center)
-		center.ability.cry_multiuse = math.ceil(1 + (G.GAME.extra_multiuse or 0))
-	end,
 }
 -- ://;
 -- Ends the current non-boss blind, skips cash out
@@ -4689,9 +4621,6 @@ local semicolon = {
 	demicoloncompat = true,
 	force_use = function(self, card, area)
 		self:use(card, area)
-	end,
-	set_ability = function(self, center)
-		center.ability.cry_multiuse = math.ceil(1 + (G.GAME.extra_multiuse or 0))
 	end,
 }
 
@@ -4753,6 +4682,7 @@ local automaton = {
 	force_use = function(self, card, area)
 		self:use(card, area)
 	end,
+	attributes = { "generation", "code", "consumable" },
 }
 -- Source (Spectral)
 -- Gives a selected playing card Green Seal
@@ -4834,6 +4764,7 @@ local source = {
 	force_use = function(self, card, area)
 		self:use(card, area)
 	end,
+	attributes = { "modify_card", "seals" },
 }
 -- Green Seal
 -- Creates a Code card when played and unscoring
@@ -4865,6 +4796,7 @@ local green_seal = {
 			}))
 		end
 	end,
+	attributes = { "generation", "code", "consumable" },
 }
 -- Encoded Deck
 -- Start with Code Joker and Copy/Paste, all cards in shop are Code cards
@@ -4936,6 +4868,7 @@ local encoded = {
 			unlock_card(self)
 		end
 	end,
+	attributes = { "joker", "code", "consumable" },
 }
 -- Code Joker
 -- Creates a Negative Code card when starting blind
@@ -5023,6 +4956,7 @@ local CodeJoker = {
 			unlock_card(self)
 		end
 	end,
+	attributes = { "generation", "code", "consumable" },
 }
 -- Copy/Paste
 -- When a Code card is used, create a copy (once/round modest/mainline)
@@ -5099,6 +5033,10 @@ local copypaste = {
 					G.E_MANAGER:add_event(Event({
 						func = function()
 							local cards = copy_card(context.consumeable)
+							if G.GAME.ACTIVE_CODE_CARD then
+								-- don't copy the temporary multiuse increase for code cards that summon a UI
+								cards.ability.cry_multiuse = (cards.ability.cry_multiuse or 2) - 1
+							end
 							cards:add_to_deck()
 							G.consumeables:emplace(cards)
 							return true
@@ -5141,6 +5079,7 @@ local copypaste = {
 			"Auto Watto",
 		},
 	},
+	attributes = { "generation", "code", "consumable" },
 }
 -- Cut
 -- Destroys a Code card and gains 0.5 Xmult when leaving shop
@@ -5199,29 +5138,12 @@ local cut = {
 						return true
 					end,
 				}))
-				if not (context.blueprint_card or self).getting_sliced and (not msg or type(msg) == "string") then
-					card_eval_status_text((context.blueprint_card or card), "extra", nil, nil, nil, {
-						message = msg or localize({
-							type = "variable",
-							key = "a_xmult",
-							vars = { number_format(to_big(card.ability.extra.Xmult)) },
-						}),
-					})
-				end
 				return nil, true
 			end
 		end
 		if context.joker_main and (to_big(card.ability.extra.Xmult) > to_big(1)) then
 			return {
-				message = localize({
-					type = "variable",
-					key = "a_xmult",
-					vars = {
-						number_format(card.ability.extra.Xmult),
-					},
-				}),
-				Xmult_mod = card.ability.extra.Xmult,
-				colour = G.C.MULT,
+				Xmult = card.ability.extra.Xmult,
 			}
 		end
 		if context.forcetrigger then
@@ -5233,8 +5155,7 @@ local cut = {
 				colour = G.C.RED,
 			})
 			return {
-				Xmult_mod = card.ability.extra.Xmult,
-				colour = G.C.MULT,
+				Xmult = card.ability.extra.Xmult,
 			}
 		end
 	end,
@@ -5257,6 +5178,7 @@ local cut = {
 			"Auto Watto",
 		},
 	},
+	attributes = { "destroy_card", "code", "consumable", "scaling", "xmult" },
 }
 -- Blender
 -- Creates a random Consumeable when Code card used
@@ -5305,6 +5227,7 @@ local blender = {
 			"Kailen",
 		},
 	},
+	attributes = { "generation", "code", "consumable" },
 }
 -- Python
 -- Gains 0.15 Xmult when Code card used
@@ -5346,40 +5269,30 @@ local python = {
 			and not context.consumeable.beginning_end
 			and not context.blueprint
 		then
-			card.ability.extra.Xmult = lenient_bignum(to_big(card.ability.extra.Xmult) + card.ability.extra.Xmult_mod)
-			G.E_MANAGER:add_event(Event({
-				func = function()
-					card_eval_status_text(card, "extra", nil, nil, nil, {
-						message = localize({
-							type = "variable",
-							key = "a_xmult",
-							vars = { number_format(card.ability.extra.Xmult) },
-						}),
-					})
-					return true
-				end,
-			}))
-			return
+			SMODS.scale_card(card, {
+				ref_table = card.ability.extra,
+				ref_value = "Xmult",
+				scalar_value = "Xmult_mod",
+				message_colour = G.C.MULT,
+				message_key = "a_xmult",
+			})
+			return nil, true
 		end
 		if context.joker_main and (to_big(card.ability.extra.Xmult) > to_big(1)) then
 			return {
-				message = localize({
-					type = "variable",
-					key = "a_xmult",
-					vars = { number_format(card.ability.extra.Xmult) },
-				}),
-				Xmult_mod = lenient_bignum(card.ability.extra.Xmult),
+				Xmult = lenient_bignum(card.ability.extra.Xmult),
 			}
 		end
 		if context.forcetrigger then
-			card.ability.extra.Xmult = lenient_bignum(to_big(card.ability.extra.Xmult) + card.ability.extra.Xmult_mod)
+			SMODS.scale_card(card, {
+				ref_table = card.ability.extra,
+				ref_value = "Xmult",
+				scalar_value = "Xmult_mod",
+				message_colour = G.C.MULT,
+				message_key = "a_xmult",
+			})
 			return {
-				message = localize({
-					type = "variable",
-					key = "a_xmult",
-					vars = { number_format(card.ability.extra.Xmult) },
-				}),
-				Xmult_mod = lenient_bignum(card.ability.extra.Xmult),
+				Xmult = lenient_bignum(card.ability.extra.Xmult),
 			}
 		end
 	end,
@@ -5394,6 +5307,7 @@ local python = {
 			"Kailen",
 		},
 	},
+	attributes = { "consumable", "code", "xmult", "scaling" },
 }
 local code_cards = {
 	code,

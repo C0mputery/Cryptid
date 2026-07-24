@@ -25,6 +25,7 @@ SMODS.Joker:take_ownership("green_joker", {
 					message_key = "a_mult_minus",
 					message_colour = G.C.RED,
 				})
+				return nil, true
 			end
 		end
 		if context.cardarea == G.jokers and context.before and not context.blueprint then
@@ -35,6 +36,7 @@ SMODS.Joker:take_ownership("green_joker", {
 				message_key = "a_mult",
 				message_colour = G.C.RED,
 			})
+			return nil, true
 		end
 		if context.joker_main then
 			return {
@@ -47,7 +49,7 @@ SMODS.Joker:take_ownership("green_joker", {
 }, true)
 
 --Requires Malverk Mod
-if (SMODS.Mods["malverk"] or {}).can_load then
+if next(SMODS.find_mod("Malverk")) then
 	AltTexture({
 		key = "jolly_jokers",
 		set = "Joker",
@@ -72,7 +74,7 @@ if (SMODS.Mods["malverk"] or {}).can_load then
 end
 
 --Make extra modifiers display on the Next Ante Preview
-if (SMODS.Mods["AntePreview"] or {}).can_load then
+if next(SMODS.find_mod("AntePreview")) then
 	local predict_hook = predict_next_ante
 	function predict_next_ante()
 		local small = "bl_small"

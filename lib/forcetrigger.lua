@@ -300,7 +300,7 @@ function Cryptid.forcetrigger(card, context)
 		end
 		if card.ability.name == "Runner" then
 			SMODS.scale_card(card, {
-				ref_table = card.ability,
+				ref_table = card.ability.extra,
 				ref_value = "chips",
 				scalar_value = "chip_mod",
 				no_message = true,
@@ -309,7 +309,7 @@ function Cryptid.forcetrigger(card, context)
 		end
 		if card.ability.name == "Ice Cream" then
 			SMODS.scale_card(card, {
-				ref_table = card.ability,
+				ref_table = card.ability.extra,
 				ref_value = "chips",
 				scalar_value = "chip_mod",
 				operation = "-",
@@ -519,7 +519,6 @@ function Cryptid.forcetrigger(card, context)
 			if context.scoring_hand and #context.scoring_hand > 0 then
 				for k, v in ipairs(context.scoring_hand) do
 					if v.config.center ~= G.P_CENTERS.c_base and not v.debuff and not v.vampired then
-						enhanced[#enhanced + 1] = v
 						v.vampired = true
 						v:set_ability(G.P_CENTERS.c_base, nil, true)
 					end
@@ -528,7 +527,6 @@ function Cryptid.forcetrigger(card, context)
 			elseif G and G.hand and #G.hand.highlighted > 0 then
 				for k, v in ipairs(G.hand.highlighted) do
 					if v.config.center ~= G.P_CENTERS.c_base and not v.debuff and not v.vampired then
-						enhanced[#enhanced + 1] = v
 						v.vampired = true
 						v:set_ability(G.P_CENTERS.c_base, nil, true)
 					end
@@ -776,7 +774,7 @@ function Cryptid.forcetrigger(card, context)
 		-- if card.ability.name == "Seltzer" then results = { jokers = { } } end
 		if card.ability.name == "Castle" then
 			SMODS.scale_card(card, {
-				ref_table = card.ability,
+				ref_table = card.ability.extra,
 				ref_value = "chips",
 				scalar_value = "chip_mod",
 				no_message = true,

@@ -244,6 +244,36 @@ SMODS.DrawStep({
 	end,
 })
 
+--Banished cards drawstep (thank you bandisplay :pray:)
+SMODS.DrawStep({
+	key = "banished_card",
+	order = 69,
+	func = function(card, layer)
+		if
+			not G.GAME.USING_POINTER
+			and card.area
+			and card.area.config.collection
+			and G.GAME.cry_banished_keys[card.config.center_key]
+		then
+			card.children.center:draw_shader("debuff", nil, card.ARGS.send_to_shader)
+		end
+	end,
+})
+
+--Quartz Stake - Draw Pinned sticker
+SMODS.DrawStep({
+	key = "pinned_draw",
+	order = 41,
+	func = function(card, layer)
+		if card.pinned and G.shared_stickers.pinned then
+			G.shared_stickers.pinned.role.draw_major = card
+			G.shared_stickers["pinned"]:draw_shader("dissolve", nil, nil, nil, card.children.center)
+			G.shared_stickers["pinned"]:draw_shader("voucher", nil, card.ARGS.send_to_shader, nil, card.children.center)
+		end
+	end,
+	conditions = { vortex = false, facing = "front" },
+})
+
 -- Make hover UI collidable - so we can detect collision and display tooltips
 local m = Card.move
 function Card:move(dt)

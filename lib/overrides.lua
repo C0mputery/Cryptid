@@ -335,35 +335,6 @@ end
 --Game:update hook
 local upd = Game.update
 
---init colors so they have references
-G.C.CRY_TWILIGHT = { 0, 0, 0, 0 }
-G.C.CRY_VERDANT = { 0, 0, 0, 0 }
-G.C.CRY_EMBER = { 0, 0, 0, 0 }
-G.C.CRY_DAWN = { 0, 0, 0, 0 }
-G.C.CRY_HORIZON = { 0, 0, 0, 0 }
-G.C.CRY_BLOSSOM = { 0, 0, 0, 0 }
-G.C.CRY_AZURE = { 0, 0, 0, 0 }
-G.C.CRY_ASCENDANT = { 0, 0, 0, 0 }
-G.C.CRY_JOLLY = { 0, 0, 0, 0 }
-G.C.CRY_GREENGRADIENT = { 0, 0, 0, 0 }
-G.C.CRY_ALTGREENGRADIENT = { 0, 0, 0, 0 }
-Cryptid.C = {
-	EXOTIC = { HEX("708b91"), HEX("1e9eba") },
-	TWILIGHT = { HEX("0800ff"), HEX("aa00ff") },
-	VERDANT = { HEX("00ff22"), HEX("f4ff57") },
-	EMBER = { HEX("ff0000"), HEX("ffae00") },
-	DAWN = { HEX("00aaff"), HEX("ff00e3") },
-	HORIZON = { HEX("c8fd09"), HEX("1ee7d9") },
-	BLOSSOM = { HEX("ff09da"), HEX("ffd121") },
-	AZURE = { HEX("0409ff"), HEX("63dcff") },
-	ASCENDANT = { HEX("2e00f5"), HEX("e5001d") },
-	JOLLY = { HEX("6ec1f5"), HEX("456b84") },
-	SELECTED = { HEX("e38039"), HEX("ccdd1b") },
-	GREENGRADIENT = { HEX("51e099"), HEX("1e523a") },
-	ALTGREENGRADIENT = { HEX("6bb565"), HEX("bd28bf") },
-	TAX_MULT = { HEX("FE5F55"), HEX("40ff40") },
-	TAX_CHIPS = { HEX("009dff"), HEX("40ff40") },
-}
 cry_pointer_dt = 0
 cry_jimball_dt = 0
 cry_glowing_dt = 0
@@ -371,6 +342,7 @@ cry_glowing_dt2 = 0
 local none_eval = 0
 function Game:update(dt)
 	upd(self, dt)
+	--[[
 	if not Cryptid.member_count_delay then
 		Cryptid.member_count_delay = 0
 	end
@@ -381,20 +353,7 @@ function Game:update(dt)
 		Cryptid.member_count_delay = 0
 	else
 		Cryptid.member_count_delay = Cryptid.member_count_delay + dt
-	end
-	--Gradients based on Balatrostuck code
-	local anim_timer = self.TIMERS.REAL * 1.5
-	local p = 0.5 * (math.sin(anim_timer) + 1)
-	for k, c in pairs(Cryptid.C) do
-		if not G.C["CRY_" .. k] then
-			G.C["CRY_" .. k] = { 0, 0, 0, 0 }
-		end
-		for i = 1, 4 do
-			G.C["CRY_" .. k][i] = c[1][i] * p + c[2][i] * (1 - p)
-		end
-	end
-	G.C.RARITY["cry_exotic"] = G.C.CRY_EXOTIC
-	G.C.SECONDARY_SET["Content Set"] = G.C.CRY_ASCENDANT
+	end]]
 	-- Idk what this is for
 	if Incantation and not CryptidIncanCompat then
 		AllowStacking("Code")
@@ -506,7 +465,7 @@ function Game:update(dt)
 				--Update UI
 				--todo: in blinds screen, too
 				if G.blind_select_opts then
-					if (SMODS.Mods["StrangeLib"] or {}).can_load then
+					if next(SMODS.find_mod("StrangeLib")) then
 						StrangeLib.dynablind.blind_choice_scores[c] = get_blind_amount(G.GAME.round_resets.blind_ante)
 							* G.GAME.starting_params.ante_scaling
 							* G.GAME.CRY_BLINDS[c]
@@ -573,17 +532,9 @@ function Game:update(dt)
 end
 
 -- All the scattered set_cost hooks from all the pre refactor files moved into one hook
-local sc = Card.set_cost
-function Card:set_cost()
-	-- Makes the edition cost increase usually present not apply if this variable is true
-	if self.edition and G.GAME.modifiers.cry_no_edition_price then
-		local m = Cryptid.deep_copy(self.edition)
-		self.edition = nil
-		sc(self)
-		self.edition = m
-	else
-		sc(self)
-	end
+local sc = Card.set_cost_value
+function Card:set_cost_value()
+	sc(self)
 	--Makes cube and Big Cube always cost a set amount
 	if self.ability.name == "cry-Cube" then
 		if Card.get_gameset(self) ~= "modest" then
@@ -618,7 +569,6 @@ function Card:set_cost()
 	end
 
 	--Update related costs
-	self.sell_cost = math.max(1, math.floor(self.cost / 2)) + (self.ability.extra_value or 0)
 	if
 		self.area
 		and self.ability.couponed
@@ -627,9 +577,16 @@ function Card:set_cost()
 	then
 		self.cost = 0
 	end
+end
+
+local ssc = Card.set_sell_value
+function Card:set_sell_value()
+	ssc(self)
 	--Makes Cursed Jokers always sell for $0
 	if self.config and self.config.center and self.config.center.rarity == "cry_cursed" then
 		self.sell_cost = 0
+	elseif self.ability and self.ability.cry_no_sell_value then
+		self.sell_cost = 0 + (self.ability.extra_value or 0)
 	--Rotten Egg
 	elseif G.GAME.cry_rotten_amount then
 		self.sell_cost = G.GAME.cry_rotten_amount
@@ -748,16 +705,8 @@ function SMODS.create_mod_badges(obj, badges)
 					},
 				},
 			}
-			local function eq_col(x, y)
-				for i = 1, 4 do
-					if x[i] ~= y[i] then
-						return false
-					end
-				end
-				return true
-			end
 			for i = 1, #badges do
-				if eq_col(badges[i].nodes[1].config.colour, HEX("708b91")) then
+				if badges[i].nodes[1].config.colour == SMODS.Mods.Cryptid.badge_colour then
 					badges[i].nodes[1].nodes[2].config.object:remove()
 					badges[i] = cry_badge
 					break
@@ -845,7 +794,7 @@ end
 function calculate_reroll_cost(skip_increment)
 	local limit = G.GAME.reroll_limit_buffer or nil
 	if not limit then
-		if next(find_joker("cry-candybuttons")) then
+		if next(SMODS.find_card("j_cry_candy_buttons")) then
 			limit = 1
 		elseif G.GAME.used_vouchers.v_cry_rerollexchange then
 			limit = 2
@@ -854,7 +803,7 @@ function calculate_reroll_cost(skip_increment)
 	if not G.GAME.current_round.free_rerolls or G.GAME.current_round.free_rerolls < 0 then
 		G.GAME.current_round.free_rerolls = 0
 	end
-	if next(find_joker("cry-crustulum")) or G.GAME.current_round.free_rerolls > 0 then
+	if next(SMODS.find_card("j_cry_crustulum")) or G.GAME.current_round.free_rerolls > 0 then
 		G.GAME.current_round.reroll_cost = 0
 		return
 	end
@@ -902,7 +851,7 @@ function create_card(_type, area, legendary, _rarity, skip_materialize, soulable
 			G.GAME.aequilibriumkey = 1
 		end
 		local aeqactive = nil
-		if next(find_joker("Ace Aequilibrium")) and not forced_key then
+		if next(SMODS.find_card("j_cry_equilib")) and not forced_key then
 			while not aeqactive or not aeqviable(G.P_CENTER_POOLS.Joker[aeqactive]) do
 				if math.ceil(G.GAME.aequilibriumkey) > #G.P_CENTER_POOLS["Joker"] then
 					G.GAME.aequilibriumkey = 1
@@ -960,64 +909,8 @@ function create_card(_type, area, legendary, _rarity, skip_materialize, soulable
 	if front and G.GAME.modifiers.cry_force_seal then
 		card:set_seal(G.GAME.modifiers.cry_force_seal)
 	end
-	if
-		G.GAME.modifiers.cry_force_sticker == "eternal"
-		or (
-			G.GAME.modifiers.cry_sticker_sheet_plus
-			and not (
-				(_type == "Base" or _type == "Enhanced") and not ((area == G.shop_jokers) or (area == G.pack_cards))
-			)
-		)
-	then -- wow that is long
-		card:set_eternal(true)
-		card.ability.eternal = true
-	end
-	if
-		G.GAME.modifiers.cry_force_sticker == "perishable"
-		or (
-			G.GAME.modifiers.cry_sticker_sheet_plus
-			and not (
-				(_type == "Base" or _type == "Enhanced") and not ((area == G.shop_jokers) or (area == G.pack_cards))
-			)
-		)
-	then
-		card:set_perishable(true)
-		card.ability.perish_tally = G.GAME.perishable_rounds -- set_perishable should be doing this? whatever
-		card.ability.perishable = true
-	end
-	if
-		G.GAME.modifiers.cry_force_sticker == "rental"
-		or (
-			G.GAME.modifiers.cry_sticker_sheet_plus
-			and not (
-				(_type == "Base" or _type == "Enhanced") and not ((area == G.shop_jokers) or (area == G.pack_cards))
-			)
-		)
-	then
-		card:set_rental(true)
-		card.ability.rental = true
-	end
-	if
-		G.GAME.modifiers.cry_force_sticker == "pinned"
-		or (
-			G.GAME.modifiers.cry_sticker_sheet_plus
-			and not (
-				(_type == "Base" or _type == "Enhanced") and not ((area == G.shop_jokers) or (area == G.pack_cards))
-			)
-		)
-	then
-		card.pinned = true
-	end
-	if
-		G.GAME.modifiers.cry_force_sticker == "banana"
-		or (
-			G.GAME.modifiers.cry_sticker_sheet_plus
-			and not (
-				(_type == "Base" or _type == "Enhanced") and not ((area == G.shop_jokers) or (area == G.pack_cards))
-			)
-		)
-	then
-		card.ability.banana = true
+	if G.GAME.modifiers.cry_force_sticker then
+		card:add_sticker(G.GAME.modifiers.cry_force_sticker, true)
 	end
 	if G.GAME.modifiers.cry_sticker_sheet_plus and not (_type == "Base" or _type == "Enhanced") then
 		for k, v in pairs(SMODS.Stickers) do
@@ -1119,6 +1012,9 @@ function create_card(_type, area, legendary, _rarity, skip_materialize, soulable
 		local edition = Cryptid.poll_random_edition()
 		card:set_edition(edition, true)
 	end
+	if card.ability.set == "Code" and G.GAME.extra_multiuse and G.GAME.extra_multiuse ~= 0 then
+		card.ability.cry_multiuse = math.ceil((card.ability.cry_multiuse or 1) + G.GAME.extra_multiuse)
+	end
 	if not (card.edition and (card.edition.cry_oversat or card.edition.cry_glitched)) then
 		Cryptid.manipulate(card)
 	end
@@ -1138,16 +1034,6 @@ function create_card(_type, area, legendary, _rarity, skip_materialize, soulable
 	if card.ability.consumeable and card.pinned then -- counterpart is in Sticker.toml
 		G.GAME.cry_pinned_consumeables = G.GAME.cry_pinned_consumeables + 0
 	end
-	if next(find_joker("Cry-topGear")) and card.config.center.rarity == 1 then
-		if
-			card.ability.name ~= "cry-meteor"
-			and card.ability.name ~= "cry-exoplanet"
-			and card.ability.name ~= "cry-stardust"
-			and card.ability.name ~= "cry-universe"
-		then
-			card:set_edition("e_polychrome", true, nil, true)
-		end
-	end
 	if card.ability.name == "cry-meteor" then
 		card:set_edition("e_foil", true, nil, true)
 	end
@@ -1164,6 +1050,27 @@ function create_card(_type, area, legendary, _rarity, skip_materialize, soulable
 	-- during the update function. Cryptid can create jokers mid-scoring, meaning
 	-- those values will be unset during scoring unless update() is manually called.
 	card:update(0.016) -- dt is unused in the base game, but we're providing a realistic value anyway
+	return card
+end
+
+local create_pcard = create_playing_card
+function create_playing_card(card_init, area, skip_materialize, silent, colours, skip_emplace)
+	local card = create_pcard(card_init, area, skip_materialize, silent, colours, skip_emplace)
+	if G.GAME.modifiers.cry_force_suit then
+		card:change_suit(G.GAME.modifiers.cry_force_suit)
+	end
+	if G.GAME.modifiers.cry_force_enhancement then
+		card:set_ability(G.P_CENTERS[G.GAME.modifiers.cry_force_enhancement])
+	end
+	if G.GAME.modifiers.cry_force_edition then
+		card:set_edition({ [G.GAME.modifiers.cry_force_edition] = true }, true, true)
+	end
+	if G.GAME.modifiers.cry_force_seal then
+		card:set_seal(G.GAME.modifiers.cry_force_seal)
+	end
+	if G.GAME.modifiers.cry_force_sticker then
+		card:add_sticker(G.GAME.modifiers.cry_force_sticker)
+	end
 	return card
 end
 
@@ -1918,7 +1825,7 @@ local discard_ref = G.FUNCS.discard_cards_from_highlighted
 G.FUNCS.discard_cards_from_highlighted = function(e, hook)
 	--Labyrinth: set current_round_discards_used to 0 for effects
 	G.GAME.current_round.discards_used2 = G.GAME.current_round.discards_used
-	if next(find_joker("cry-maze")) then
+	if next(SMODS.find_card("j_cry_maze")) then
 		G.GAME.current_round.discards_used = 0
 	end
 	discard_ref(e, hook)
@@ -1928,9 +1835,7 @@ G.FUNCS.discard_cards_from_highlighted = function(e, hook)
 			return a.T.x < b.T.x
 		end)
 		check_for_unlock({ type = "discard_custom", cards = {} })
-		for j = 1, #G.jokers.cards do
-			G.jokers.cards[j]:calculate_joker({ pre_discard = true, full_hand = G.hand.highlighted, hook = hook })
-		end
+		SMODS.calculate_context({ pre_discard = true, full_hand = G.hand.highlighted, hook = hook })
 		if not hook then
 			if G.GAME.modifiers.discard_cost then
 				ease_dollars(-G.GAME.modifiers.discard_cost)
@@ -1966,7 +1871,7 @@ G.FUNCS.play_cards_from_highlighted = function(e)
 		trigger = "immediate",
 		func = function()
 			G.GAME.current_round.hands_played2 = G.GAME.current_round.hands_played
-			if next(find_joker("cry-maze")) then
+			if next(SMODS.find_card("j_cry_maze")) then
 				G.GAME.current_round.hands_played = 0
 			end
 			return true
@@ -2200,8 +2105,11 @@ function SMODS.calculate_individual_effect(effect, scored_card, key, amount, fro
 		local chip_mod = chips.current * amount
 		local mult_mod = mult.current * amount
 
-		chips:modify(mult_mod - chip_mod)
-		mult:modify(chip_mod - mult_mod)
+		-- modifications are done in two steps to avoid rounding errors
+		chips.current = chips.current * (1 - amount)
+		chips:modify(mult_mod)
+		mult.current = mult.current * (1 - amount)
+		mult:modify(chip_mod)
 
 		if key == "cry_broken_swap" and not Cryptid.safe_get(Talisman, "config_file", "disable_anims") then
 			G.E_MANAGER:add_event(Event({
@@ -2275,34 +2183,44 @@ end
 
 local smods_calculate_round_score_stuff = SMODS.calculate_round_score
 function SMODS.calculate_round_score(flames)
-	if not G.GAME.current_scoring_calculation then
-		return 0
-	end
-	if Cryptid.safe_get(G, "GAME", "chromatic_mod") then
-		if G.GAME.chromatic_mod % 2 == 1 then
-			return G.GAME.current_scoring_calculation:func(
-				SMODS.get_scoring_parameter("chips", flames),
-				SMODS.get_scoring_parameter("mult", flames),
-				flames
-			) * -1
-		end
-	end
+	local base = smods_calculate_round_score_stuff(flames)
 	if G.GAME.tax_mod then
-		return math.floor(
-			math.min(
-				G.GAME.tax_mod * G.GAME.blind.chips,
-				G.GAME.current_scoring_calculation:func(
-					SMODS.get_scoring_parameter("chips", flames),
-					SMODS.get_scoring_parameter("mult", flames),
-					flames
-				)
-			) + 0.5
-		)
+		base = math.floor(math.min(G.GAME.tax_mod * G.GAME.blind.chips, base) + 0.5)
 	end
-	return smods_calculate_round_score_stuff(flames)
+	return base
 end
 
 local smods_shatters_ref = SMODS.shatters
 function SMODS.shatters(card)
-	return card.cry_glass_trigger or smods_shatters_ref(card)
+	return card.cry_glass_trigger or (card.edition and card.edition.cry_glass) or smods_shatters_ref(card)
+end
+
+local level_up_ref = level_up_hand
+function level_up_hand(card, hand, instant, amount, statustext)
+	G._CRY_DEFAULT_LEVELUP = true
+	level_up_ref(card, hand, instant, amount, statustext)
+	G._CRY_DEFAULT_LEVELUP = nil
+end
+
+local smup = SMODS.upgrade_poker_hands
+function SMODS.upgrade_poker_hands(args)
+	if (not args.func or G._CRY_DEFAULT_LEVELUP) and next(SMODS.find_card("j_cry_universum")) then --basically just whenever level_up_hand was called directly or upgrade_poker_hands would do so
+		local universum_mod = 1
+		local lvl_amt = (type(args.level_up) == "number" or is_big(args.level_up)) and args.level_up or 1
+		local effects = {}
+		SMODS.calculate_context({ cry_universum = true }, effects)
+		for i = 1, #effects do
+			universum_mod = universum_mod * (effects[i] and effects[i].jokers and effects[i].jokers.mod or 1)
+		end
+		args.func = function(base, hand, param, level_up)
+			local lv_amt = (type(level_up) == "number" or is_big(level_up)) and level_up or 1
+			return to_big(math.max(base * (universum_mod ^ lv_amt), G.GAME.hands[hand]["s_" .. param] or 0)) --i have no fucking clue how to make this not infinity
+		end
+		if lvl_amt < 0 then
+			args.StatusText = "/" .. number_format(universum_mod ^ math.abs(lvl_amt))
+		else
+			args.StatusText = "X" .. number_format(universum_mod ^ lvl_amt)
+		end
+	end
+	smup(args)
 end

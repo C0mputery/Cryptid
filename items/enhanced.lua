@@ -95,7 +95,13 @@ local e_deck = {
 	pos = { x = 5, y = 2 },
 	loc_vars = function(self, info_queue, center)
 		local aaa = Cryptid.enhanced_deck_info(G.cry_edeck_center and self or {})
-		return { vars = { localize({ type = "name_text", set = "Edition", key = "e_" .. aaa }) } }
+		local real = "e_" .. aaa
+		return {
+			vars = {
+				localize({ type = "name_text", set = "Edition", key = real }),
+				colours = { G.P_CENTERS[real].badge_colour or G.C.DARK_EDITION },
+			},
+		}
 	end,
 	edeck_type = "edition",
 	config = { cry_no_edition_price = true },
@@ -131,6 +137,7 @@ local e_deck = {
 			unlock_card(self)
 		end
 	end,
+	attributes = { "edition" },
 }
 local et_deck = {
 	object_type = "Back",
@@ -147,7 +154,12 @@ local et_deck = {
 	config = {},
 	loc_vars = function(self, info_queue, center)
 		local _, bbb = Cryptid.enhanced_deck_info(self)
-		return { vars = { localize({ type = "name_text", set = "Enhanced", key = bbb }) } }
+		return {
+			vars = {
+				localize({ type = "name_text", set = "Enhanced", key = bbb }),
+				colours = { G.P_CENTERS[bbb].badge_colour or G.C.FILTER },
+			},
+		}
 	end,
 	apply = function(self)
 		local aaa, bbb = Cryptid.enhanced_deck_info(self)
@@ -174,6 +186,7 @@ local et_deck = {
 			unlock_card(self)
 		end
 	end,
+	attributes = { "enhancements" },
 }
 local sk_deck = {
 	object_type = "Back",
@@ -190,10 +203,12 @@ local sk_deck = {
 	config = {},
 	loc_vars = function(self, info_queue, center)
 		local _, _, ccc = Cryptid.enhanced_deck_info(self)
-		if ccc == "pinned" then
-			ccc = "pinned_left"
-		end
-		return { vars = { localize({ type = "name_text", set = "Other", key = ccc }) } }
+		return {
+			vars = {
+				localize({ type = "name_text", set = "Other", key = ccc == "pinned" and "pinned_left" or ccc }),
+				colours = { SMODS.Stickers[ccc].badge_colour or G.C.FILTER },
+			},
+		}
 	end,
 	apply = function(self)
 		local aaa, bbb, ccc = Cryptid.enhanced_deck_info(self)
@@ -201,10 +216,8 @@ local sk_deck = {
 		G.E_MANAGER:add_event(Event({
 			func = function()
 				for c = #G.playing_cards, 1, -1 do
-					G.playing_cards[c].config.center.eternal_compat = true
-					G.playing_cards[c].config.center.perishable_compat = true
-					if SMODS.Stickers[ccc] and SMODS.Stickers[ccc].apply then
-						SMODS.Stickers[ccc]:apply(G.playing_cards[c], true)
+					if SMODS.Stickers[ccc] then
+						G.playing_cards[c]:add_sticker(ccc, true)
 					else
 						G.playing_cards[c]["set_" .. ccc](G.playing_cards[c], true)
 					end
@@ -225,6 +238,7 @@ local sk_deck = {
 			unlock_card(self)
 		end
 	end,
+	attributes = { "sticker" },
 }
 local st_deck = {
 	object_type = "Back",
@@ -241,18 +255,14 @@ local st_deck = {
 	edeck_type = "suit",
 	loc_vars = function(self, info_queue, center)
 		local _, _, _, ddd = Cryptid.enhanced_deck_info(self)
-		return { vars = { localize(ddd, "suits_plural") } }
+		return { vars = { localize(ddd, "suits_plural"), colours = { G.C.SUITS[ddd] } } }
 	end,
 	apply = function(self)
 		local aaa, bbb, ccc, ddd = Cryptid.enhanced_deck_info(self)
-		if ddd == "Spades" then
-			G.GAME.bosses_used["bl_goad"] = 1e308
-		elseif ddd == "Hearts" then
-			G.GAME.bosses_used["bl_head"] = 1e308
-		elseif ddd == "Clubs" then
-			G.GAME.bosses_used["bl_club"] = 1e308
-		elseif ddd == "Diamonds" then
-			G.GAME.bosses_used["bl_window"] = 1e308
+		for _, blind in pairs(G.P_BLINDS) do
+			if Cryptid.safe_get(blind, "debuff", "suit") == ddd then --ban all blinds that debuff the selected suit (in the normal way)
+				G.GAME.banned_keys[blind.key] = true
+			end
 		end
 		G.GAME.modifiers.cry_force_suit = ddd
 		G.E_MANAGER:add_event(Event({
@@ -276,6 +286,7 @@ local st_deck = {
 			unlock_card(self)
 		end
 	end,
+	attributes = { "suit" },
 }
 local sl_deck = {
 	object_type = "Back",
@@ -292,7 +303,12 @@ local sl_deck = {
 	edeck_type = "seal",
 	loc_vars = function(self, info_queue, center)
 		local _, _, _, _, eee = Cryptid.enhanced_deck_info(self)
-		return { vars = { localize({ type = "name_text", set = "Other", key = eee:lower() .. "_seal" }) } }
+		return {
+			vars = {
+				localize({ type = "name_text", set = "Other", key = eee:lower() .. "_seal" }),
+				colours = { G.P_SEALS[eee].badge_colour },
+			},
+		}
 	end,
 	apply = function(self)
 		local aaa, bbb, ccc, ddd, eee = Cryptid.enhanced_deck_info(self)
@@ -318,6 +334,7 @@ local sl_deck = {
 			unlock_card(self)
 		end
 	end,
+	attributes = { "seals" },
 }
 
 return {

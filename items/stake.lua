@@ -47,8 +47,19 @@ local jade = {
 	pos = { x = 3, y = 0 },
 	atlas = "stake",
 	applied_stakes = { "cry_yellow" },
-	modifiers = function()
-		G.GAME.modifiers.flipped_cards = 20
+	calculate = function(self, context)
+		if
+			context.stay_flipped
+			and context.to_area == G.hand
+			and SMODS.pseudorandom_probability(self, "cry_jade_stake", 1, 20)
+		then
+			return {
+				stay_flipped = true,
+			}
+		end
+	end,
+	loc_vars = function(self)
+		return { vars = { SMODS.get_probability_vars(self, 1, 20, "cry_jade_stake") } }
 	end,
 	shiny = true,
 	order = 12,
@@ -62,10 +73,10 @@ local cyan = {
 	atlas = "stake",
 	applied_stakes = { "cry_jade" },
 	modifiers = function()
-		G.GAME.modifiers.cry_rarer_jokers = true
+		-- G.GAME.modifiers.cry_rarer_jokers = true
 		-- Note that this is not the exact rarity as the old lovely patch might be nerf/buff to the stake
-		G.GAME.uncommon_mod = 0.8
-		G.GAME.rare_mod = 0.8
+		G.GAME.uncommon_mod = (G.GAME.uncommon_mod or 1) * 0.8
+		G.GAME.rare_mod = (G.GAME.rare_mod or 1) * 0.8
 	end,
 	order = 13,
 	colour = HEX("39ffcc"),
@@ -118,7 +129,12 @@ local amber = {
 	atlas = "stake",
 	applied_stakes = { "cry_diamond" },
 	modifiers = function()
-		G.GAME.modifiers.extra_boosters = -1
+		G.E_MANAGER:add_event(Event({
+			func = function(n)
+				SMODS.change_booster_limit(-1)
+				return true
+			end,
+		}))
 	end,
 	shiny = true,
 	order = 17,
@@ -173,9 +189,6 @@ local glass = {
 	pos = { x = 2, y = 2 },
 	atlas = "stake",
 	applied_stakes = { "cry_ruby" },
-	modifiers = function()
-		G.GAME.modifiers.cry_shatter_rate = 30
-	end,
 	shiny = true,
 	order = 21,
 	colour = HEX("ffffff8f"),
@@ -183,13 +196,15 @@ local glass = {
 		if
 			context.destroy_card
 			and context.cardarea == G.play
-			and G.GAME.modifiers.cry_shatter_rate
-			and SMODS.pseudorandom_probability(self, "cry_shatter", 1, G.GAME.modifiers.cry_shatter_rate)
+			and SMODS.pseudorandom_probability(self, "cry_shatter", 1, 30)
 			and not SMODS.is_eternal(context.destroy_card)
 		then
 			context.destroy_card.cry_glass_trigger = true
 			return { remove = true }
 		end
+	end,
+	loc_vars = function(self)
+		return { vars = { SMODS.get_probability_vars(self, 1, 30, "cry_shatter") } }
 	end,
 }
 local sapphire = {
@@ -236,15 +251,6 @@ local platinum = {
 	order = 24,
 	colour = HEX("b0f6ff"),
 }
---init colors so they have references
-G.C.CRY_TWILIGHT = { 0, 0, 0, 0 }
-G.C.CRY_VERDANT = { 0, 0, 0, 0 }
-G.C.CRY_EMBER = { 0, 0, 0, 0 }
-G.C.CRY_DAWN = { 0, 0, 0, 0 }
-G.C.CRY_HORIZON = { 0, 0, 0, 0 }
-G.C.CRY_BLOSSOM = { 0, 0, 0, 0 }
-G.C.CRY_AZURE = { 0, 0, 0, 0 }
-G.C.CRY_ASCENDANT = { 0, 0, 0, 0 }
 local twilight = {
 	object_type = "Stake",
 	name = "cry-Twilight Stake",
@@ -308,12 +314,19 @@ local horizon = {
 	pos = { x = 0, y = 4 },
 	atlas = "stake",
 	applied_stakes = { "cry_dawn" },
-	modifiers = function()
-		G.GAME.modifiers.cry_card_each_round = true
-	end,
 	shiny = true,
 	order = 29,
 	colour = G.C.CRY_HORIZON,
+	calculate = function(self, context)
+		if context.setting_blind then
+			local card = SMODS.add_card({
+				area = G.deck,
+				set = "Base",
+				key_append = "cry_horizon",
+			})
+			SMODS.calculate_context({ playing_card_added = true, cards = { card } })
+		end
+	end,
 }
 local blossom = {
 	object_type = "Stake",

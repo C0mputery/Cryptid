@@ -2,7 +2,7 @@
 # Cryptid
 An unbalanced Balatro mod.
 
-Note: Cryptid requires [Steamodded](https://github.com/Steamodded/smods/releases/latest) and [Talisman](https://github.com/SpectralPack/Talisman/releases/latest).
+Note: Cryptid requires [Steamodded](https://github.com/Steamodded/smods/releases/latest) and [Amulet](https://github.com/frostice482/amulet/releases/latest).
 
 Cryptid currently adds:
 
@@ -12,8 +12,11 @@ Cryptid currently adds:
 
 
 ### [Official Discord](https://discord.gg/eUf9Ur6RyB)
-### [Mac Video Installation Guide](https://youtu.be/l5ni7fHgwTE?si=GAN5t5-y_IuEv8uA)
-### [Not Mac Video Installation Guide](https://www.youtube.com/watch?v=aUr0gXE77rk)
+### [Balatro Modding Guide](https://github.com/Steamodded/smods/wiki)
+(Cryptid and any other mods are installed identically to steamodded)
+### Outdated guides (will be removed here at some point)
+[Mac Video Installation Guide](https://youtu.be/l5ni7fHgwTE?si=GAN5t5-y_IuEv8uA)
+[Not Mac Video Installation Guide](https://www.youtube.com/watch?v=aUr0gXE77rk)
 
 ### Frequently asked questions
 * Credit to @jenwalter666 for creating this FAQ (forwarded from Cryptid Discord)
@@ -28,8 +31,8 @@ It could also be that Steamodded is out of date, sometimes mods may use features
 
 > *I can't see any new jokers/content!*
 
-If you've installed everything correctly, but no new jokers, blinds, etc. are ingame, check the Mods list by clicking on [MODS] in the main menu, and look for Cryptid/Talisman.
-If they show up red, that means there's a problem. Hover over the mod icon (which should be an exclamation mark) to see what said problem is. It could be an outdated dependency in most cases.
+If you've installed everything correctly, but no new jokers, blinds, etc. are ingame, check the Mods list by clicking on [MODS] in the main menu, and look for Cryptid/Amulet.
+If they show up red, that means there's a problem. Hover over the mod icon (which should be an exclamation mark) to see what said problem is. It could be an outdated dependency in most cases. However If the mod button doesn't show up, it means steamodded hasn't been downloaded correctly.  
 
 > *What's up with all the "M" jokers/references to Jolly Joker?*
 
@@ -42,9 +45,9 @@ You can also enable/disable certain music tracks in the Music tab. If you're a s
 
 > *I'm hitting infinity very often, is there any way to raise the limit of the scoring system?*
 
-Talisman may not be configured to be on **Omeganum** mode, which has a maximum limit of e10##1000. You can make the limit virtually disappear by going into Mods, then clicking Talisman, and changing the Score Limit under Config. Be careful; if you have a saved run that was on a different number system, you won't be able to load it (unless if you switch back)!
+Amulet may not be configured to be on **Omeganum** mode, which has a maximum limit of e10##1000. You can make the limit virtually disappear by going into Mods, then clicking Amulet, and changing the Score Limit under Config. Be careful; if you have a saved run that was on a different number system, you won't be able to load it (unless if you switch back)!
 
 > *I've experienced a crash/bug!*
 
-Be sure to give us as much information about the bug/crash as possible. A way to reproduce the bug/crash is also especially useful information to help us fix it.
+Be sure to give us as much information about the bug/crash as possible in our [Discord](https://discord.com/invite/eUf9Ur6RyB). A way to reproduce the bug/crash is also especially useful information to help us fix it.
 Remember; just saying you're crashing doesn't tell us anything. We need to know the details!

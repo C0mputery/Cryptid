@@ -1,10 +1,10 @@
 -- Welcome to the Cryptid source code!
 -- This is the main file for the mod, where everything is loaded and initialized.
--- If you're looking for a specific feature, browse the items folder to see how it is implemented.
--- If you're looking for a specific function, check the lib folder to see if it is there.
+-- If you're looking for a specific feature (like jokers or consumables), browse the items folder to see how it is implemented.
+-- If you're looking for a specific function (like ascended hands or https), check the lib folder to see if it is there.
 
 if not Cryptid then
-	Cryptid = {}
+	Cryptid = {} -- if it works it works
 end
 local mod_path = "" .. SMODS.current_mod.path -- this path changes when each mod is loaded, but the local variable will retain Cryptid's path
 Cryptid.path = mod_path
@@ -23,25 +23,124 @@ SMODS.current_mod.optional_features = {
 	-- Might already be useful for sticker calc
 
 	-- Cryptid uses cardarea deck now
+	--[[ no the fuck is doesnt?
 	cardareas = {
 		deck = true,
 		discard = true, -- used by scorch
 	},
+	]]
 }
+
+--Create gradients used by Cryptid
+local exotic = SMODS.Gradient({
+	key = "exotic",
+	colours = { HEX("708b91"), HEX("1e9eba") },
+	cycle = 5,
+})
+local twilight = SMODS.Gradient({
+	key = "twilight",
+	colours = { HEX("0800ff"), HEX("aa00ff") },
+	cycle = 5,
+})
+local verdant = SMODS.Gradient({
+	key = "verdant",
+	colours = { HEX("00ff22"), HEX("f4ff57") },
+	cycle = 5,
+})
+local ember = SMODS.Gradient({
+	key = "ember",
+	colours = { HEX("ff0000"), HEX("ffae00") },
+	cycle = 5,
+})
+local dawn = SMODS.Gradient({
+	key = "dawn",
+	colours = { HEX("00aaff"), HEX("ff00e3") },
+	cycle = 5,
+})
+local horizon = SMODS.Gradient({
+	key = "horizon",
+	colours = { HEX("c8fd09"), HEX("1ee7d9") },
+	cycle = 5,
+})
+local blossom = SMODS.Gradient({
+	key = "blossom",
+	colours = { HEX("ff09da"), HEX("ffd121") },
+	cycle = 5,
+})
+local azure = SMODS.Gradient({
+	key = "azure",
+	colours = { HEX("0409ff"), HEX("63dcff") },
+	cycle = 5,
+})
+local ascendant = SMODS.Gradient({
+	key = "ascendant",
+	colours = { HEX("2e00f5"), HEX("e5001d") },
+	cycle = 5,
+})
+local jolly = SMODS.Gradient({
+	key = "jolly",
+	colours = { HEX("6ec1f5"), HEX("456b84") },
+	cycle = 5,
+})
+local selected = SMODS.Gradient({
+	key = "selected",
+	colours = { HEX("e38039"), HEX("ccdd1b") },
+	cycle = 5,
+})
+local greengradient = SMODS.Gradient({
+	key = "greengradient",
+	colours = { HEX("51e099"), HEX("1e523a") },
+	cycle = 5,
+})
+local altgreengradient = SMODS.Gradient({
+	key = "altgreengradient",
+	colours = { HEX("6bb565"), HEX("bd28bf") },
+	cycle = 5,
+})
+local tax_mult = SMODS.Gradient({
+	key = "tax_mult",
+	colours = { HEX("FE5F55"), HEX("40ff40") },
+	cycle = 5,
+})
+local tax_chips = SMODS.Gradient({
+	key = "tax_chips",
+	colours = { HEX("009dff"), HEX("40ff40") },
+	cycle = 5,
+})
+Cryptid.C = {
+	EXOTIC = exotic,
+	TWILIGHT = twilight,
+	VERDANT = verdant,
+	EMBER = ember,
+	DAWN = dawn,
+	HORIZON = horizon,
+	BLOSSOM = blossom,
+	AZURE = azure,
+	ASCENDANT = ascendant,
+	JOLLY = jolly,
+	SELECTED = selected,
+	GREENGRADIENT = greengradient,
+	ALTGREENGRADIENT = altgreengradient,
+	TAX_MULT = tax_mult,
+	TAX_CHIPS = tax_chips,
+}
+G.C.SECONDARY_SET["Content Set"] = Cryptid.C.ASCENDANT
+for k, c in pairs(Cryptid.C) do --this is for back compat mostly
+	G.C["CRY_" .. k] = c
+end
 
 --Load Library Files
 local files = NFS.getDirectoryItems(mod_path .. "lib")
 for _, file in ipairs(files) do
-	print("[CRYPTID] Loading library file " .. file)
-	local f, err = SMODS.load_file("lib/" .. file)
-	if err then
-		error(err) --Steamodded actually does a really good job of displaying this info! So we don't need to do anything else.
+	if string.match(file, "%.lua$") then -- fix the index local ret thing cuz its annoying when other files exist and cryptid tries to read em
+		print("[CRYPTID] Loading library file " .. file)
+		local f, err = SMODS.load_file("lib/" .. file)
+		assert(f, err)()
 	end
-	f()
 end
 local function process_items(f, mod)
 	local ret = f()
-	if not ret.disabled then
+	if ret and not ret.disabled then
 		if ret.init and type(ret.init) == "function" then
 			ret:init()
 		end
@@ -110,12 +209,14 @@ Cryptid.object_registry = {}
 Cryptid.object_buffer = {}
 local files = NFS.getDirectoryItems(mod_path .. "items")
 for _, file in ipairs(files) do
-	print("[CRYPTID] Loading file " .. file)
-	local f, err = SMODS.load_file("items/" .. file)
-	if err then
-		error(err) --Steamodded actually does a really good job of displaying this info! So we don't need to do anything else.
+	if string.match(file, "%.lua$") then -- fix the index local ret thing cuz its annoying when other files exist and cryptid tries to read em
+		print("[CRYPTID] Loading file " .. file)
+		local f, err = SMODS.load_file("items/" .. file)
+		if err then
+			error(err) --Steamodded actually does a really good job of displaying this info! So we don't need to do anything else.
+		end
+		process_items(f)
 	end
-	process_items(f)
 end
 
 -- Check for files in other mods
@@ -137,12 +238,14 @@ for _, mod in pairs(SMODS.Mods) do
 			if file == "Cryptid" and path .. "Cryptid/" ~= Cryptid.path then
 				local files = NFS.getDirectoryItems(path .. "Cryptid")
 				for _, file in ipairs(files) do
-					print("[CRYPTID] Loading file " .. file .. " from " .. mod.id)
-					local f, err = SMODS.load_file("Cryptid/" .. file, mod.id)
-					if err then
-						error(err) --Steamodded actually does a really good job of displaying this info! So we don't need to do anything else.
+					if string.match(file, "%.lua$") then
+						print("[CRYPTID] Loading file " .. file .. " from " .. mod.id)
+						local f, err = SMODS.load_file("Cryptid/" .. file, mod.id)
+						if err then
+							error(err) --Steamodded actually does a really good job of displaying this info! So we don't need to do anything else.
+						end
+						process_items(f, mod)
 					end
-					process_items(f, mod)
 				end
 			end
 		end
@@ -251,6 +354,10 @@ SMODS.calculate_repetitions = function(card, context, reps)
 	return reps
 end
 
+G.FUNCS.update_cry_members = function(...)
+	Cryptid.update_member_count()
+end
+
 local cryptidConfigTab = function()
 	cry_nodes = {
 		{
@@ -321,6 +428,12 @@ local cryptidConfigTab = function()
 		colour = G.C.CRY_ALTGREENGRADIENT,
 		button = "reset_gameset_config",
 		label = { localize("b_reset_gameset_" .. (G.PROFILES[G.SETTINGS.profile].cry_gameset or "mainline")) },
+		minw = 5,
+	})
+	cry_nodes[#cry_nodes + 1] = UIBox_button({
+		colour = G.C.CRY_JOLLY,
+		button = "update_cry_members",
+		label = { localize("b_update_membership_cards") },
 		minw = 5,
 	})
 	return {

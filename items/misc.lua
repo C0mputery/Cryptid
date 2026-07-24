@@ -40,6 +40,7 @@ local echo = {
 			}
 		end
 	end,
+	attributes = { "chance", "retrigger" },
 }
 -- Eclipse (Tarot)
 -- Makes a selected playing card Echo
@@ -75,6 +76,7 @@ local eclipse = {
 		return { vars = { card and card.ability.max_highlighted or self.config.max_highlighted } }
 	end,
 	demicoloncompat = true,
+	attributes = { "enhancements", "modify_card" },
 }
 -- Light (Enhancement)
 -- When triggered with 5 other cards, gain 0.2 Xmult
@@ -131,6 +133,7 @@ local light = {
 			end
 		end
 	end,
+	attributes = { "xmult", "scaling" },
 }
 -- Seraph (Tarot)
 -- Makes 2 selected playing cards Light
@@ -166,6 +169,7 @@ local seraph = {
 		return { vars = { card and card.ability.max_highlighted or self.config.max_highlighted } }
 	end,
 	demicoloncompat = true,
+	attributes = { "enhancements", "modify_card" },
 }
 -- Abstract (Enhancement)
 -- Has its own rank/suit
@@ -239,15 +243,7 @@ local abstract = {
 		end
 		if context.cardarea == G.play and context.main_scoring then
 			return {
-				message = localize({
-					type = "variable",
-					key = "a_powmult",
-					vars = {
-						number_format(card.ability.extra.Emult),
-					},
-				}),
-				Emult_mod = card.ability.extra.Emult,
-				colour = G.C.DARK_EDITION,
+				emult = card.ability.extra.Emult,
 			}
 		end
 
@@ -270,6 +266,7 @@ local abstract = {
 		end
 		card.ability.extra.survive = false
 	end,
+	attributes = { "emult", "chance", "destroy_card" },
 }
 -- Instability (Tarot)
 -- Makes a selected playing card Abstract
@@ -305,6 +302,7 @@ local instability = {
 		return { vars = { card and card.ability.max_highlighted or self.config.max_highlighted } }
 	end,
 	demicoloncompat = true,
+	attributes = { "enhancements", "modify_card" },
 }
 
 -- Blessing
@@ -371,6 +369,7 @@ local blessing = {
 	force_use = function(self, card, area)
 		self:use(card, area)
 	end,
+	attributes = { "generation", "consumable" },
 }
 
 -- insert typhoon here (why is it in spectral.lua)
@@ -443,6 +442,7 @@ local azure_seal = {
 			return { remove = true }
 		end
 	end,
+	attributes = { "generation", "planet", "consumable" },
 }
 
 -- Packs
@@ -497,7 +497,7 @@ local meme1 = {
 	create_card = function(self, card)
 		if
 			Cryptid.enabled("j_cry_waluigi")
-			and not (G.GAME.used_jokers["j_cry_waluigi"] and not next(find_joker("Showman")))
+			and not (G.GAME.used_jokers["j_cry_waluigi"] and not SMODS.showman("j_cry_waluigi"))
 		then
 			if pseudorandom("meme1_" .. G.GAME.round_resets.ante) > 0.997 then
 				return create_card("Meme", G.pack_cards, nil, nil, true, true, "j_cry_waluigi", nil)
@@ -524,6 +524,7 @@ local meme1 = {
 	end,
 	group_key = "k_cry_meme_pack",
 	cry_digital_hallucinations = meme_digital_hallucinations_compat,
+	attributes = { "joker" },
 }
 -- Meme Pack 2 (2/5 Meme Jokers)
 local meme2 = {
@@ -555,13 +556,13 @@ local meme2 = {
 	create_card = function(self, card)
 		if
 			Cryptid.enabled("j_cry_waluigi")
-			and not (G.GAME.used_jokers["j_cry_waluigi"] and not next(find_joker("Showman")))
+			and not (G.GAME.used_jokers["j_cry_waluigi"] and not SMODS.showman("j_cry_waluigi"))
 		then
-			if pseudorandom("memetwo_" .. G.GAME.round_resets.ante) > 0.997 then
+			if pseudorandom("meme1_" .. G.GAME.round_resets.ante) > 0.997 then
 				return create_card("Meme", G.pack_cards, nil, nil, true, true, "j_cry_waluigi", nil)
 			end
 		end
-		return create_card("Meme", G.pack_cards, nil, nil, true, true, nil, "cry_memetwo")
+		return create_card("Meme", G.pack_cards, nil, nil, true, true, nil, "cry_meme")
 	end,
 	ease_background_colour = function(self)
 		ease_colour(G.C.DYN_UI.MAIN, G.C.CRY_ASCENDANT)
@@ -582,6 +583,7 @@ local meme2 = {
 	end,
 	group_key = "k_cry_meme_pack",
 	cry_digital_hallucinations = meme_digital_hallucinations_compat,
+	attributes = { "joker" },
 }
 -- Meme Pack 3 (2/5 Meme Jokers)
 local meme3 = {
@@ -613,13 +615,13 @@ local meme3 = {
 	create_card = function(self, card)
 		if
 			Cryptid.enabled("j_cry_waluigi")
-			and not (G.GAME.used_jokers["j_cry_waluigi"] and not next(find_joker("Showman")))
+			and not (G.GAME.used_jokers["j_cry_waluigi"] and not SMODS.showman("j_cry_waluigi"))
 		then
-			if pseudorandom("memethree_" .. G.GAME.round_resets.ante) > 0.997 then
+			if pseudorandom("meme1_" .. G.GAME.round_resets.ante) > 0.997 then
 				return create_card("Meme", G.pack_cards, nil, nil, true, true, "j_cry_waluigi", nil)
 			end
 		end
-		return create_card("Meme", G.pack_cards, nil, nil, true, true, nil, "cry_memethree")
+		return create_card("Meme", G.pack_cards, nil, nil, true, true, nil, "cry_meme")
 	end,
 	ease_background_colour = function(self)
 		ease_colour(G.C.DYN_UI.MAIN, G.C.CRY_ASCENDANT)
@@ -640,6 +642,7 @@ local meme3 = {
 	end,
 	group_key = "k_cry_meme_pack",
 	cry_digital_hallucinations = meme_digital_hallucinations_compat,
+	attributes = { "joker" },
 }
 -- 804 in case of meme pack 4
 -- 805-808 for program packs
@@ -712,6 +715,7 @@ local baneful1 = {
 	end,
 	group_key = "k_cry_baneful_pack",
 	cry_digital_hallucinations = cursed_digital_hallucinations_compat,
+	attributes = { "joker" },
 }
 -- 810-812 reserved for more Baneful packs if they come
 
@@ -785,6 +789,7 @@ local mosaic = {
 			card.config.trigger = nil
 		end
 	end,
+	attributes = { "xchips" },
 }
 
 local oversat_shader = {
@@ -903,6 +908,7 @@ local oversat = {
 			end
 		end
 	end,
+	attributes = { "value_manip" },
 }
 
 local glitched_shader = {
@@ -1148,6 +1154,7 @@ local glitched = {
 			end
 		end
 	end,
+	attributes = { "value_manip" },
 }
 
 local astral_shader = {
@@ -1214,6 +1221,7 @@ local astral = {
 			card.config.trigger = nil
 		end
 	end,
+	attributes = { "emult" },
 }
 
 local blurred_shader = {
@@ -1282,6 +1290,7 @@ local blurred = {
 			}
 		end
 	end,
+	attributes = { "retrigger", "chance" },
 }
 
 local noisy_shader = {
@@ -1658,6 +1667,7 @@ local noisy = {
 			end
 		end
 	end,
+	attributes = { "chips", "mult" },
 }
 
 local jollyeditionshader = {
@@ -1791,6 +1801,7 @@ local jollyedition = {
 			return full_UI_table
 		end
 	end,
+	attributes = { "mult" },
 }
 
 local glass_shader = {
@@ -1849,7 +1860,7 @@ local glass_edition = {
 		}
 	end,
 	calculate = function(self, card, context)
-		if context.edition and context.cardarea == G.jokers and card.config.trigger then
+		if context.post_joker and context.cardarea == G.jokers then
 			return { x_mult = card and card.edition and card.edition.x_mult or self.config.x_mult }
 		end
 
@@ -1860,39 +1871,29 @@ local glass_edition = {
 		then
 			if
 				not SMODS.is_eternal(card)
-				and not (
-					pseudorandom(pseudoseed("cry_fragile"))
-					> ((self.config.shatter_chance - 1) / self.config.shatter_chance)
+				and not SMODS.pseudorandom_probability(
+					card,
+					"cry_fragile",
+					card.edition.shatter_chance - 1,
+					card.edition.shatter_chance,
+					nil,
+					true
 				)
 			then
-				-- this event call might need to be pushed later to make more sense
-				G.E_MANAGER:add_event(Event({
-					func = function()
-						play_sound("glass" .. math.random(1, 6), math.random() * 0.2 + 0.9, 0.5)
-						card.states.drag.is = true
-						G.E_MANAGER:add_event(Event({
-							trigger = "after",
-							delay = 0.3,
-							blockable = false,
-							func = function()
-								G.jokers:remove_card(card)
-								card:remove()
-								card:start_dissolve({ HEX("57ecab") }, nil, 1.6)
-								card = nil
-								return true
-							end,
-						}))
-						return true
-					end,
-				}))
+				card.getting_sliced = true
+				SMODS.destroy_cards(card)
 			end
 		end
 		if context.main_scoring and context.cardarea == G.play then
 			if
 				not SMODS.is_eternal(card)
-				and (
-					pseudorandom(pseudoseed("cry_fragile"))
-					> ((self.config.shatter_chance - 1) / self.config.shatter_chance)
+				and SMODS.pseudorandom_probability(
+					card,
+					"cry_fragile",
+					card.edition.shatter_chance - 1,
+					card.edition.shatter_chance,
+					nil,
+					true
 				)
 			then
 				card.config.will_shatter = true
@@ -1900,37 +1901,11 @@ local glass_edition = {
 			return { x_mult = self.config.x_mult }
 		end
 
-		if context.joker_main then
-			card.config.trigger = true -- context.edition triggers twice, this makes it only trigger once (only for jonklers)
-		end
-
-		if context.after then
-			card.config.trigger = nil
-		end
-
-		if context.destroying_card and card.config.will_shatter then
-			G.E_MANAGER:add_event(Event({
-				func = function()
-					play_sound("glass" .. math.random(1, 6), math.random() * 0.2 + 0.9, 0.5)
-					card.states.drag.is = true
-					G.E_MANAGER:add_event(Event({
-						trigger = "after",
-						delay = 0.3,
-						blockable = false,
-						func = function()
-							G.jokers:remove_card(card)
-							card:remove()
-							card:start_dissolve({ HEX("57ecab") }, nil, 1.6)
-							card = nil
-							return true
-						end,
-					}))
-					return true
-				end,
-			}))
+		if context.destroy_card and context.destroy_card == card and card.config.will_shatter then
 			return { remove = true }
 		end
 	end,
+	attributes = { "chance", "destroy_card", "xmult" },
 }
 
 local gold_shader = {
@@ -1969,7 +1944,15 @@ local gold_edition = {
 	in_shop = true,
 	config = { dollars = 2, active = true },
 	loc_vars = function(self, info_queue, card)
-		return { vars = { card and card.edition and card.edition.dollars or self.config.dollars } }
+		local key = self.key
+		if card.playing_card and card.ability and card.ability.consumeable then
+			key = key .. "_ccd"
+		elseif card.playing_card then
+			key = key .. "_playing_card"
+		elseif card.ability and card.ability.consumeable then
+			key = key .. "_consumable"
+		end
+		return { vars = { card and card.edition and card.edition.dollars or self.config.dollars }, key = key }
 	end,
 	sound = {
 		sound = "cry_e_golden",
@@ -1999,6 +1982,7 @@ local gold_edition = {
 			return { p_dollars = card and card.edition and card.edition.dollars or self.config.dollars } -- updated value
 		end
 	end,
+	attributes = { "economy" },
 }
 
 local double_sided = {
@@ -2151,12 +2135,13 @@ local double_sided = {
 		end
 		function Card:flip_side()
 			local card = self
+			card.cry_flipping = true
 			if not card.ability.immutable then
 				card.ability.immutable = {}
 			end
 			if card.ability.immutable.other_side then
 				if type(card.ability.immutable.other_side) == "string" then
-					if next(find_joker("cry-Flip Side")) then
+					if next(SMODS.find_card("j_cry_flip_side")) then
 						if card:get_other_side_dummy() then
 							local dummy = card:get_other_side_dummy()
 							dummy.added_to_deck = true
@@ -2165,10 +2150,12 @@ local double_sided = {
 					else
 						card:remove_from_deck(true)
 					end
+					local curr_pc = card.playing_card
 					local curr_abil = copy_table(card.ability)
 					local key = card.config.center.key
 					local base = copy_table(card.base)
 					local seal = card.seal
+					card.playing_card = card.ability.immutable.other_side.playing_card
 					if card.ability.immutable.other_side.base then
 						card.base = card.ability.immutable.other_side.base
 					else
@@ -2182,11 +2169,6 @@ local double_sided = {
 					end
 					if card.base.nominal ~= 0 then
 						SMODS.change_base(card, card.base.suit, card.base.value)
-					else
-						if card.children.front then
-							card.children.front:remove()
-							card.children.front = nil
-						end
 					end
 					card.seal = G.P_SEALS[card.ability.immutable.other_side.seal]
 							and card.ability.immutable.other_side.seal
@@ -2196,9 +2178,11 @@ local double_sided = {
 						card.ability.immutable = {}
 					end
 					card.ability.immutable.other_side = curr_abil
+					card.ability.immutable.other_side.base = base
+					card.ability.immutable.other_side.playing_card = curr_pc
 					card.ability.immutable.other_side.key = key
 					card.ability.immutable.other_side.seal = G.P_SEALS[seal] and seal or nil
-					if next(find_joker("cry-Flip Side")) then
+					if next(SMODS.find_card("j_cry_flip_side")) then
 						if card:get_other_side_dummy() then
 							Card.add_to_deck(card:get_other_side_dummy(), true)
 						end
@@ -2207,7 +2191,7 @@ local double_sided = {
 					end
 					card.ability.immutable.other_side.base = base
 				else
-					if next(find_joker("cry-Flip Side")) then
+					if next(SMODS.find_card("j_cry_flip_side")) then
 						local dummy = card:get_other_side_dummy()
 						dummy.added_to_deck = true
 						Card.remove_from_deck(dummy, true)
@@ -2215,9 +2199,11 @@ local double_sided = {
 						card:remove_from_deck(true)
 					end
 					local curr_abil = copy_table(card.ability)
+					local curr_pc = card.playing_card
 					local key = card.config.center.key
 					local seal = card.seal
 					local base = copy_table(card.base)
+					card.playing_card = card.ability.immutable.other_side.playing_card
 					if card.ability.immutable.other_side.base then
 						card.base = card.ability.immutable.other_side.base
 					else
@@ -2231,11 +2217,6 @@ local double_sided = {
 					end
 					if card.base.nominal ~= 0 then
 						SMODS.change_base(card, card.base.suit, card.base.value)
-					else
-						if card.children.front then
-							card.children.front:remove()
-							card.children.front = nil
-						end
 					end
 					card.seal = G.P_SEALS[card.ability.immutable.other_side.seal]
 							and card.ability.immutable.other_side.seal
@@ -2248,9 +2229,10 @@ local double_sided = {
 						card.ability.immutable = {}
 					end
 					card.ability.immutable.other_side = curr_abil
+					card.ability.immutable.other_side.playing_card = curr_pc
 					card.ability.immutable.other_side.key = key
 					card.ability.immutable.other_side.seal = G.P_SEALS[seal] and seal or nil
-					if next(find_joker("cry-Flip Side")) then
+					if next(SMODS.find_card("j_cry_flip_side")) then
 						Card.add_to_deck(card:get_other_side_dummy(), true)
 					else
 						card:add_to_deck(true)
@@ -2258,6 +2240,7 @@ local double_sided = {
 					card.ability.immutable.other_side.base = base
 				end
 			end
+			card.cry_flipping = nil
 		end
 		function Card:get_other_side_dummy(added_to_deck)
 			if self.ability.immutable and type(self.ability.immutable.other_side) == "table" then
@@ -2325,6 +2308,14 @@ local double_sided = {
 				return true
 			end
 			return no_suitref(card)
+		end
+
+		local should_hide_frontref = Card.should_hide_front
+		function Card:should_hide_front(...)
+			if self.edition and self.edition.key == "e_cry_double_sided" and not self.base.value then
+				return true
+			end
+			return should_hide_frontref(self, ...)
 		end
 
 		-- 		local calculate_joker = Card.calculate_joker
@@ -2460,11 +2451,12 @@ G.FUNCS.merge_ds = function(e)
 	card.ability.immutable.other_side = copy_table(other.ability)
 	card.ability.immutable.other_side.key = copy_table(other.config.center.key)
 	card.ability.immutable.other_side.seal = copy_table(other.seal)
+	card.ability.immutable.other_side.playing_card = other.playing_card
 	if other.base.nominal ~= 0 then
 		card.ability.immutable.other_side.base = copy_table(other.base)
 	end
 	other:start_dissolve()
-	if next(find_joker("cry-Flip Side")) then
+	if next(SMODS.find_card("j_cry_flip_side")) then
 		card:remove_from_deck(true)
 		Card.add_to_deck(card:get_other_side_dummy(), true)
 	end
@@ -2538,7 +2530,7 @@ local miscitems = {
 	eclipse,
 	blessing,
 	azure_seal,
-	double_sided,
+	--double_sided, (you had a good run)
 	abstract,
 	instability,
 	absolute,

@@ -32,6 +32,7 @@ local cotton_candy = {
 			end
 		end
 	end,
+	attributes = { "on_sell", "editions", "joker", "modify_card", "food", "position" },
 }
 local wrapped = {
 	object_type = "Joker",
@@ -107,6 +108,7 @@ local wrapped = {
 			G.jokers:emplace(card)
 		end
 	end,
+	attributes = { "generation", "joker", "food" },
 }
 local choco_dice = {
 	object_type = "Joker",
@@ -374,6 +376,7 @@ local potion = {
 		end
 		delay(12 / G.SETTINGS.GAMESPEED)
 	end,
+	attributes = { "hands", "discard", "hand_level" },
 }
 local choco4 = { --lunar abyss
 	object_type = "Event",
@@ -650,7 +653,7 @@ local spy = {
 		end
 	end,
 	add_to_deck = function(self, card, from_debuff)
-		G.jokers.config.card_limit = G.jokers.config.card_limit + 1
+		G.jokers:change_size(1)
 		card.ability.perishable = true
 		card.ability.perish_tally = G.GAME.perishable_rounds
 		card.config.center.rarity = "cry_cursed"
@@ -658,14 +661,12 @@ local spy = {
 		card.ability.extra.revealed = true
 	end,
 	remove_from_deck = function(self, card, from_debuff)
-		G.jokers.config.card_limit = G.jokers.config.card_limit - 1
+		G.jokers:change_size(-1)
 	end,
 	calculate = function(self, card, context)
 		if context.joker_main then
 			return {
-				message = localize({ type = "variable", key = "a_xmult", vars = { card.ability.x_mult } }),
-				Xmult_mod = card.ability.x_mult,
-				colour = G.C.MULT,
+				xmult = card.ability.x_mult,
 			}
 		end
 	end,
@@ -900,6 +901,7 @@ local trick_or_treat = {
 			},
 		}
 	end,
+	attributes = { "on_sell", "chance", "generation", "rarity" },
 }
 local candy_basket = {
 	object_type = "Joker",
@@ -951,6 +953,7 @@ local candy_basket = {
 					end,
 					no_message = true,
 				})
+				return nil, true
 			end
 			if card.ability.immutable.current_win_count >= card.ability.immutable.wins_needed then
 				card.ability.immutable.current_win_count = 0
@@ -959,6 +962,7 @@ local candy_basket = {
 					ref_value = "candies",
 					scalar_value = "candy_mod",
 				})
+				return nil, true
 			end
 		end
 		if context.forcetrigger then
@@ -981,6 +985,7 @@ local candy_basket = {
 				card:add_to_deck()
 				G.jokers:emplace(card)
 			end
+			return nil, true
 		end
 	end,
 	loc_vars = function(self, info_queue, center)
@@ -995,6 +1000,7 @@ local candy_basket = {
 			},
 		}
 	end,
+	attributes = { "on_sell", "boss_blind", "scaling", "rarity", "generation", "joker" },
 }
 local blacklist = {
 	object_type = "Joker",
@@ -1089,6 +1095,7 @@ local blacklist = {
 			},
 		}
 	end,
+	attributes = { "rank" },
 }
 local ghost = {
 	object_type = "Joker",
@@ -1308,6 +1315,7 @@ local rotten_egg = {
 			},
 		}
 	end,
+	attributes = { "lose_economy", "sell_value" },
 }
 
 local spookydeck = {
@@ -1370,6 +1378,7 @@ local spookydeck = {
 			unlock_card(self)
 		end
 	end,
+	attributes = { "joker", "rarity", "generation" },
 }
 local candy_dagger = {
 	object_type = "Joker",
@@ -1419,19 +1428,21 @@ local candy_dagger = {
 					return true
 				end,
 			}))
-			card_eval_status_text(card, "extra", nil, nil, nil, {
+			SMODS.add_card({
+				set = "Joker",
+				rarity = "cry_candy",
+				area = G.jokers,
+				key_append = "cry_candy_dagger",
+			})
+			return {
 				message = localize({
 					type = "variable",
 					key = "a_candy",
 					vars = { 1 },
 				}),
-				colour = G.C.RARITY["cry_candy"],
+				colour = G.C.RARITY.cry_candy,
 				no_juice = true,
-			})
-			local card = create_card("Joker", G.jokers, nil, "cry_candy", nil, nil, nil, "cry_candy_dagger")
-			card:add_to_deck()
-			G.jokers:emplace(card)
-			return nil, true
+			}
 		end
 		if context.forcetrigger and my_pos and G.jokers.cards[my_pos + 1] then
 			local sliced_card = G.jokers.cards[my_pos + 1]
@@ -1463,6 +1474,7 @@ local candy_dagger = {
 			G.jokers:emplace(card)
 		end
 	end,
+	attributes = { "destroy_card", "generation", "rarity", "joker" },
 }
 local candy_cane = {
 	object_type = "Joker",
@@ -1584,6 +1596,7 @@ local candy_cane = {
 			end
 		end
 	end,
+	attributes = { "economy", "food" },
 }
 local candy_buttons = {
 	object_type = "Joker",
@@ -1647,6 +1660,7 @@ local candy_buttons = {
 	remove_from_deck = function(self, card, from_debuff)
 		calculate_reroll_cost(true)
 	end,
+	attributes = { "shop", "food", "reroll", "economy" },
 }
 local jawbreaker = {
 	object_type = "Joker",
@@ -1736,6 +1750,7 @@ local jawbreaker = {
 	remove_from_deck = function(self, card, from_debuff)
 		calculate_reroll_cost(true)
 	end,
+	attributes = { "food", "boss_blind", "value_manip", "position" },
 }
 local mellowcreme = {
 	object_type = "Joker",
@@ -1772,6 +1787,7 @@ local mellowcreme = {
 			end
 		end
 	end,
+	attributes = { "on_sell", "sell_value" },
 }
 local brittle = {
 	object_type = "Joker",
@@ -1848,6 +1864,7 @@ local brittle = {
 			end
 		end
 	end,
+	attributes = { "modify_card", "enhancements", "food" },
 }
 local monopoly_money = {
 	object_type = "Joker",
@@ -1925,6 +1942,7 @@ local monopoly_money = {
 			},
 		}
 	end,
+	attributes = { "lose_economy", "on_sell", "destroy_card" },
 }
 local candy_sticks = {
 	object_type = "Joker",
@@ -1940,7 +1958,7 @@ local candy_sticks = {
 	config = {
 		extra = { hands = 1 },
 		immutable = {
-			boss = {},
+			boss = nil,
 			clockscore = 0,
 		},
 	},
@@ -1971,14 +1989,16 @@ local candy_sticks = {
 				end,
 			}))
 		end
-		if context.after and G.GAME.blind:get_type() == "Boss" then
+		if context.after and G.GAME.blind:get_type() == "Boss" and card.ability.immutable.boss then
 			card.ability.extra.hands = lenient_bignum(to_big(card.ability.extra.hands) - 1)
 		end
 		if
 			(
 				(context.selling_self and G.GAME.blind and G.GAME.blind:get_type() == "Boss")
 				or to_big(card.ability.extra.hands) <= to_big(0)
-			) and G.GAME.blind.disabled
+			)
+			and G.GAME.blind.disabled
+			and card.ability.immutable.boss
 		then
 			G.GAME.blind:load(card.ability.immutable.boss)
 			if not context.selling_self then
@@ -2009,7 +2029,7 @@ local candy_sticks = {
 				}
 			end
 		end
-		if context.end_of_round and G.GAME.blind:get_type() == "Boss" then
+		if context.end_of_round and G.GAME.blind:get_type() == "Boss" and card.ability.immutable.boss then
 			G.E_MANAGER:add_event(Event({
 				func = function()
 					play_sound("tarot1")
@@ -2047,6 +2067,7 @@ local candy_sticks = {
 			"Foegro",
 		},
 	},
+	attributes = { "food", "boss_blind", "hands" },
 }
 -- Wonka Bar
 -- Sell this card to permanently gain +1 card selection limit
@@ -2088,6 +2109,7 @@ local wonka_bar = {
 			"Glitchkat10",
 		},
 	},
+	attributes = { "on_sell", "play_limit", "discard_limit", "food" },
 }
 
 -- Buttercup
@@ -2175,6 +2197,7 @@ local buttercup = {
 			end
 		end
 	end,
+	attributes = { "food", "on_sell", "shop" },
 }
 
 items = {

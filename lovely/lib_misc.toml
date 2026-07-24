@@ -29,19 +29,6 @@ payload = '''
 '''
 match_indent = true
 
-# Show Glitched Edition to confirm Cryptid is Active if custom main menu is enabled
-[[patches]]
-[patches.pattern]
-target = "game.lua"
-pattern = "replace_card.states.visible = false"
-position = "before"
-payload = '''
-if ((Cryptid_config and Cryptid_config.menu) or false) then
-	replace_card:set_edition(G.P_CENTERS.e_cry_glitched and 'e_cry_glitched' or 'e_negative',true,true)
-end
-'''
-match_indent = true
-
 # Draw midground layer
 [[patches]]
 [patches.pattern]
@@ -183,6 +170,19 @@ payload = '''
 assembled_string = assembled_string..(type(subpart) == 'string' and subpart or (Cryptid.pluralize and Cryptid.pluralize(subpart[1], args.vars)) or format_ui_value(args.vars[tonumber(subpart[1])]) or 'ERROR')
 '''
 match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = '''=[SMODS _ "src/utils.lua"]'''
+pattern = '''
+assembled_string = assembled_string..(type(subpart) == 'string' and subpart or format_ui_value(args.vars[tonumber(subpart[1])]) or 'ERROR')
+'''
+position = "at"
+payload = '''
+assembled_string = assembled_string..(type(subpart) == 'string' and subpart or (Cryptid.pluralize and Cryptid.pluralize(subpart[1], args.vars)) or format_ui_value(args.vars[tonumber(subpart[1])]) or 'ERROR')
+'''
+match_indent = true
+
 
 # prevent misprint crashing when big
 [[patches]]

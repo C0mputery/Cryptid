@@ -60,6 +60,7 @@ local gateway = {
 	force_use = function(self, card, area)
 		self:use(card, area)
 	end,
+	attributes = { "generation", "joker", "rarity" },
 }
 local iterum = {
 	dependencies = {
@@ -130,6 +131,7 @@ local iterum = {
 		art = { "Ein13" },
 		code = { "Math" },
 	},
+	attributes = { "xmult", "retrigger" },
 }
 local universum = {
 	dependencies = {
@@ -164,125 +166,9 @@ local universum = {
 	cry_credits = {
 		idea = { "Ein13" },
 		art = { "Ein13", "hydro" },
+		code = { "Eris" }, --didnt have code credits before? lol
 	},
-	init = function(self)
-		--Universum Patches
-		local uht = update_hand_text
-		function update_hand_text(config, vals)
-			if next(find_joker("cry-Universum")) and not Talisman.config_file.disable_anims then
-				G.E_MANAGER:add_event(Event({ --This is the Hand name text for the poker hand
-					trigger = "before",
-					blockable = not config.immediate,
-					delay = config.delay or 0.8,
-					func = function()
-						local col = G.C.GREEN
-						if vals.chips and G.GAME.current_round.current_hand.chips ~= vals.chips then
-							local delta = vals.chips
-							if is_number(vals.chips) and is_number(G.GAME.current_round.current_hand.chips) then
-								delta = "X" .. number_format(vals.chips / G.GAME.current_round.current_hand.chips)
-							end
-							G.GAME.current_round.current_hand.chips = vals.chips
-							G.hand_text_area.chips:update(0)
-							if vals.StatusText then
-								attention_text({
-									text = delta,
-									scale = 0.8,
-									hold = 1,
-									cover = G.hand_text_area.chips.parent,
-									cover_colour = mix_colours(G.C.CHIPS, col, 0.1),
-									emboss = 0.05,
-									align = "cm",
-									cover_align = "cr",
-								})
-							end
-						end
-						if vals.mult and G.GAME.current_round.current_hand.mult ~= vals.mult then
-							local delta = vals.mult
-							if is_number(vals.mult) and is_number(G.GAME.current_round.current_hand.mult) then
-								delta = "X" .. number_format(vals.mult / G.GAME.current_round.current_hand.mult)
-							end
-							G.GAME.current_round.current_hand.mult = vals.mult
-							G.hand_text_area.mult:update(0)
-							if vals.StatusText then
-								attention_text({
-									text = delta,
-									scale = 0.8,
-									hold = 1,
-									cover = G.hand_text_area.mult.parent,
-									cover_colour = mix_colours(G.C.MULT, col, 0.1),
-									emboss = 0.05,
-									align = "cm",
-									cover_align = "cl",
-								})
-							end
-							if not G.TAROT_INTERRUPT then
-								G.hand_text_area.mult:juice_up()
-							end
-						end
-						if vals.handname and G.GAME.current_round.current_hand.handname ~= vals.handname then
-							G.GAME.current_round.current_hand.handname = vals.handname
-							if not config.nopulse then
-								G.hand_text_area.handname.config.object:pulse(0.2)
-							end
-						end
-						if vals.chip_total then
-							G.GAME.current_round.current_hand.chip_total = vals.chip_total
-							G.hand_text_area.chip_total.config.object:pulse(0.5)
-						end
-						if
-							vals.level
-							and G.GAME.current_round.current_hand.hand_level
-								~= " " .. localize("k_lvl") .. tostring(vals.level)
-						then
-							if vals.level == "" then
-								G.GAME.current_round.current_hand.hand_level = vals.level
-							else
-								G.GAME.current_round.current_hand.hand_level = " "
-									.. localize("k_lvl")
-									.. tostring(vals.level)
-								if is_number(vals.level) then
-									G.hand_text_area.hand_level.config.colour =
-										G.C.HAND_LEVELS[to_number(math.min(vals.level, 7))]
-								else
-									G.hand_text_area.hand_level.config.colour = G.C.HAND_LEVELS[1]
-								end
-								G.hand_text_area.hand_level:juice_up()
-							end
-						end
-						if config.sound and not config.modded then
-							play_sound(config.sound, config.pitch or 1, config.volume or 1)
-						end
-						if config.modded then
-							if
-								G.HUD_blind
-								and G.HUD_blind.get_UIE_by_ID
-								and G.HUD_blind:get_UIE_by_ID("HUD_blind_debuff_1")
-								and G.HUD_blind:get_UIE_by_ID("HUD_blind_debuff_2")
-							then
-								G.HUD_blind:get_UIE_by_ID("HUD_blind_debuff_1"):juice_up(0.3, 0)
-								G.HUD_blind:get_UIE_by_ID("HUD_blind_debuff_2"):juice_up(0.3, 0)
-							end
-							G.GAME.blind:juice_up()
-							G.E_MANAGER:add_event(Event({
-								trigger = "after",
-								delay = 0.06 * G.SETTINGS.GAMESPEED,
-								blockable = false,
-								blocking = false,
-								func = function()
-									play_sound("tarot2", 0.76, 0.4)
-									return true
-								end,
-							}))
-							play_sound("tarot2", 1, 0.4)
-						end -- hi
-						return true
-					end,
-				}))
-			else
-				uht(config, vals)
-			end
-		end
-	end,
+	attributes = { "hand_level", "space" },
 }
 local exponentia = {
 	dependencies = {
@@ -307,15 +193,7 @@ local exponentia = {
 	calculate = function(self, card, context)
 		if context.joker_main and (to_big(card.ability.extra.Emult) > to_big(1)) then
 			return {
-				message = localize({
-					type = "variable",
-					key = "a_powmult",
-					vars = {
-						number_format(card.ability.extra.Emult),
-					},
-				}),
-				Emult_mod = lenient_bignum(card.ability.extra.Emult),
-				colour = G.C.DARK_EDITION,
+				emult = lenient_bignum(card.ability.extra.Emult),
 			}
 		end
 		if context.forcetrigger then
@@ -327,7 +205,7 @@ local exponentia = {
 				message_colour = G.C.DARK_EDITION,
 			})
 			return {
-				Emult_mod = lenient_bignum(card.ability.extra.Emult),
+				emult = lenient_bignum(card.ability.extra.Emult),
 			}
 		end
 	end,
@@ -362,7 +240,7 @@ local exponentia = {
 				and amount ~= 1
 				and mult
 			then
-				for _, v in pairs(find_joker("cry-Exponentia")) do
+				for _, v in pairs(SMODS.find_card("j_cry_exponentia")) do
 					local old = v.ability.extra.Emult
 					SMODS.scale_card(v, {
 						ref_table = v.ability.extra,
@@ -376,6 +254,7 @@ local exponentia = {
 			return ret
 		end
 	end,
+	attributes = { "emult", "scaling" },
 }
 local speculo = {
 	dependencies = {
@@ -437,6 +316,7 @@ local speculo = {
 		art = { "Mystic" },
 		code = { "Math" },
 	},
+	attributes = { "generation", "joker" },
 }
 local redeo = {
 	dependencies = {
@@ -481,11 +361,13 @@ local redeo = {
 			end
 			if ante_mod < 0 then
 				ease_ante(ante_mod)
+				G.GAME.round_resets.blind_ante = G.GAME.round_resets.ante
 			end
 			return nil, true
 		end
 		if context.forcetrigger then
-			ease_ante(card.ability.extra.ante_reduction)
+			ease_ante(-card.ability.extra.ante_reduction)
+			G.GAME.round_resets.blind_ante = G.GAME.round_resets.ante
 		end
 	end,
 	cry_credits = {
@@ -502,6 +384,7 @@ local redeo = {
 			end
 		end
 	end,
+	attributes = { "ante" },
 }
 local tenebris = {
 	dependencies = {
@@ -549,13 +432,13 @@ local tenebris = {
 		end
 	end,
 	add_to_deck = function(self, card, from_debuff)
-		G.jokers.config.card_limit = lenient_bignum(
-			G.jokers.config.card_limit + math.min(card.ability.immutable.max_slots, to_big(card.ability.extra.slots))
+		G.jokers:change_size(
+			lenient_bignum(math.min(card.ability.immutable.max_slots, to_big(card.ability.extra.slots)))
 		)
 	end,
 	remove_from_deck = function(self, card, from_debuff)
-		G.jokers.config.card_limit = lenient_bignum(
-			G.jokers.config.card_limit - math.min(card.ability.immutable.max_slots, to_big(card.ability.extra.slots))
+		G.jokers:change_size(
+			lenient_bignum(-math.min(card.ability.immutable.max_slots, to_big(card.ability.extra.slots)))
 		)
 	end,
 	cry_credits = {
@@ -563,6 +446,7 @@ local tenebris = {
 		art = { "Mystic" },
 		code = { "jenwalter666" },
 	},
+	attributes = { "passive", "joker_slot", "economy" },
 }
 local effarcire = {
 	dependencies = {
@@ -666,12 +550,7 @@ local crustulum = {
 		end
 		if context.joker_main and to_big(card.ability.extra.chips) > to_big(0) then
 			return {
-				message = localize({
-					type = "variable",
-					key = "a_chips",
-					vars = { number_format(card.ability.extra.chips) },
-				}),
-				chip_mod = lenient_bignum(card.ability.extra.chips),
+				chips = lenient_bignum(card.ability.extra.chips),
 			}
 		end
 		if context.forcetrigger then
@@ -682,7 +561,7 @@ local crustulum = {
 				message_colour = G.C.CHIPS,
 			})
 			return {
-				chip_mod = lenient_bignum(card.ability.extra.chips),
+				chips = lenient_bignum(card.ability.extra.chips),
 			}
 		end
 	end,
@@ -699,6 +578,7 @@ local crustulum = {
 		art = { "lolxddj" },
 		code = { "Jevonn" },
 	},
+	attributes = { "scaling", "chips", "shop", "food", "reroll", "economy" }, --this can have the food attribute because unlike objecttypes they dont ignore rarity when created from
 }
 --todo: make the Emult always prime
 local primus = {
@@ -727,21 +607,12 @@ local primus = {
 	atlas = "atlasexotic",
 	soul_pos = { x = 2, y = 4, extra = { x = 1, y = 4 } },
 	calculate = function(self, card, context)
-		local check = true
+		local check = false
 		if context.cardarea == G.jokers and context.before and not context.blueprint then
 			if context.scoring_hand then
 				for k, v in ipairs(context.full_hand) do
-					if
-						v:get_id() == 4
-						or v:get_id() == 6
-						or v:get_id() == 8
-						or v:get_id() == 9
-						or v:get_id() == 10
-						or v:get_id() == 11
-						or v:get_id() == 12
-						or v:get_id() == 13
-					then
-						check = false
+					if v:get_id() == 2 or v:get_id() == 3 or v:get_id() == 5 or v:get_id() == 7 or v:get_id() == 14 then
+						check = true
 					end
 				end
 			end
@@ -753,20 +624,13 @@ local primus = {
 					message_colour = G.C.DARK_EDITION,
 				})
 				card.children.floating_sprite:set_sprite_pos({ x = 8, y = 6 })
+				return nil, true
 			end
 		end
 		if context.joker_main and (to_big(card.ability.extra.Emult) > to_big(1)) then
 			card.children.floating_sprite:set_sprite_pos({ x = 8, y = 6 })
 			return {
-				message = localize({
-					type = "variable",
-					key = "a_powmult",
-					vars = {
-						number_format(card.ability.extra.Emult),
-					},
-				}),
-				Emult_mod = lenient_bignum(card.ability.extra.Emult),
-				colour = G.C.DARK_EDITION,
+				emult = lenient_bignum(card.ability.extra.Emult),
 			}
 		end
 		if context.end_of_round then
@@ -780,8 +644,7 @@ local primus = {
 				message_colour = G.C.DARK_EDITION,
 			})
 			return {
-				Emult_mod = lenient_bignum(card.ability.extra.Emult),
-				colour = G.C.DARK_EDITION,
+				emult = lenient_bignum(card.ability.extra.Emult),
 			}
 		end
 	end,
@@ -798,6 +661,7 @@ local primus = {
 		art = { "George the Rat" },
 		code = { "Jevonn" },
 	},
+	attributes = { "emult", "rank", "two", "three", "five", "seven", "ace", "scaling" },
 }
 local scalae = {
 	dependencies = {
@@ -889,6 +753,7 @@ local scalae = {
 		art = { "Mathguy" },
 		code = { "Mathguy" },
 	},
+	attributes = { "scaling", "modify_card" }, --ditto with comment on double scale
 }
 local stella_mortis = {
 	dependencies = {
@@ -933,44 +798,35 @@ local stella_mortis = {
 				or nil
 
 			if planet_to_destroy then
-				if Incantation then
-					quota = planet_to_destroy:getEvalQty()
+				if Incantation and planet_to_destroy:getEvalQty() > 1 then
+					planet_to_destroy:subQty(1) --incantation should handle this itself but just to be safe?
+				elseif Overflow and card.ability.immutable and (card.ability.immutable.overflow_amount or 0) > 1 then
+					planet_to_destroy.ability.overflow_amount = planet_to_destroy.ability.overflow_amount - 1
+				else
+					planet_to_destroy.getting_sliced = true
+					G.E_MANAGER:add_event(Event({
+						func = function()
+							(context.blueprint_card or card):juice_up(0.8, 0.8)
+							planet_to_destroy:start_dissolve({ G.C.RED }, nil, 1.6)
+							return true
+						end,
+					}))
+					planet_to_destroy.dissolve = 0 --timing issues related to crossmod stuff; Genuinely what does this actually do? -Eris
 				end
-				if Overflow then
-					quaota = planet_to_destroy.ability.immutable and planet_to_destroy.ability.immutable.overflow_amount
-				end
-				planet_to_destroy.getting_sliced = true
 				SMODS.scale_card(card, {
 					ref_table = card.ability.extra,
 					ref_value = "Emult",
 					scalar_value = "Emult_mod",
-					operation = function(ref_table, ref_value, initial, change)
-						ref_table[ref_value] = initial + change * quota
-					end,
 					message_key = "a_powmult",
 				})
-				G.E_MANAGER:add_event(Event({
-					func = function()
-						(context.blueprint_card or card):juice_up(0.8, 0.8)
-						planet_to_destroy:start_dissolve({ G.C.RED }, nil, 1.6)
-						return true
-					end,
-				}))
-				planet_to_destroy.dissolve = 0 --timing issues related to crossmod stuff
-				return nil, true
+				if not context.forcetrigger then
+					return nil, true
+				end
 			end
 		end
 		if (context.joker_main and (to_big(card.ability.extra.Emult) > to_big(1))) or context.forcetrigger then
 			return {
-				message = localize({
-					type = "variable",
-					key = "a_powmult",
-					vars = {
-						number_format(card.ability.extra.Emult),
-					},
-				}),
-				Emult_mod = lenient_bignum(card.ability.extra.Emult),
-				colour = G.C.DARK_EDITION,
+				emult = lenient_bignum(card.ability.extra.Emult),
 			}
 		end
 	end,
@@ -987,6 +843,7 @@ local stella_mortis = {
 		art = { "SMG9000", "George the Rat", "patchy", "lolxDdj" },
 		code = { "SMG9000" },
 	},
+	attributes = { "planet", "consumable", "emult", "destroy_card", "scaling", "space" },
 }
 local circulus_pistoris = {
 	dependencies = {
@@ -1037,14 +894,15 @@ local circulus_pistoris = {
 				pi = 2 * pi
 			end
 			return {
-				Echip_mod = pi,
-				Emult_mod = pi,
+				echips = pi,
+				emult = pi,
 				message = localize({
 					type = "variable",
 					key = "a_powmultchips",
 					vars = { (Cryptid.safe_get(card, "edition", "cry_oversat") and "tau" or "pi") },
 				}),
 				colour = { 0.8, 0.45, 0.85, 1 }, --plasma colors
+				remove_default_message = true,
 			}
 		end
 	end,
@@ -1053,6 +911,7 @@ local circulus_pistoris = {
 		art = { "HexaCryonic", "ori" },
 		code = { "SMG9000", "Math" },
 	},
+	attributes = { "hands", "echips", "emult" },
 }
 local aequilibrium = {
 	dependencies = {
@@ -1113,6 +972,7 @@ local aequilibrium = {
 		art = { "Elial2", "unexian", "hydro" },
 		code = { "Elial2" },
 	},
+	attributes = { "generation", "joker" },
 }
 local facile = {
 	dependencies = {
@@ -1159,13 +1019,7 @@ local facile = {
 			if to_big(card.ability.immutable.check2) <= to_big(card.ability.extra.check) then
 				card.ability.immutable.check2 = 0
 				return {
-					message = localize({
-						type = "variable",
-						key = "a_powmult",
-						vars = { number_format(card.ability.extra.Emult) },
-					}),
-					Emult_mod = lenient_bignum(card.ability.extra.Emult),
-					colour = G.C.DARK_EDITION,
+					emult = lenient_bignum(card.ability.extra.Emult),
 				}
 			else
 				card.ability.immutable.check2 = 0
@@ -1173,13 +1027,7 @@ local facile = {
 		end
 		if context.forcetrigger then
 			return {
-				message = localize({
-					type = "variable",
-					key = "a_powmult",
-					vars = { number_format(card.ability.extra.Emult) },
-				}),
-				Emult_mod = lenient_bignum(card.ability.extra.Emult),
-				colour = G.C.DARK_EDITION,
+				emult = lenient_bignum(card.ability.extra.Emult),
 			}
 		end
 	end,
@@ -1188,6 +1036,7 @@ local facile = {
 		art = { "Kailen", "hydro" },
 		code = { "Jevonn" },
 	},
+	attributes = { "emult" },
 }
 local gemino = {
 	dependencies = {
@@ -1217,10 +1066,11 @@ local gemino = {
 	order = 515,
 	atlas = "atlasexotic",
 	loc_vars = function(self, info_queue, card)
-		card.ability.blueprint_compat_ui = card.ability.blueprint_compat_ui or ""
-		card.ability.blueprint_compat_check = nil
-		return {
-			main_end = (card.area and card.area == G.jokers) and {
+		if card.area and card.area.config.type == "joker" then
+			local compatible = card.area.cards[1]
+				and card.area.cards[1] ~= card
+				and not G.jokers.cards[1].config.center.immutable
+			local main_end = {
 				{
 					n = G.UIT.C,
 					config = { align = "bm", minh = 0.4 },
@@ -1230,17 +1080,18 @@ local gemino = {
 							config = {
 								ref_table = card,
 								align = "m",
-								colour = G.C.JOKER_GREY,
+								colour = compatible and mix_colours(G.C.GREEN, G.C.JOKER_GREY, 0.8)
+									or mix_colours(G.C.RED, G.C.JOKER_GREY, 0.8),
 								r = 0.05,
 								padding = 0.06,
-								func = "blueprint_compat",
 							},
 							nodes = {
 								{
 									n = G.UIT.T,
 									config = {
-										ref_table = card.ability,
-										ref_value = "blueprint_compat_ui",
+										text = " "
+											.. localize("k_" .. (compatible and "compatible" or "incompatible"))
+											.. " ",
 										colour = G.C.UI.TEXT_LIGHT,
 										scale = 0.32 * 0.8,
 									},
@@ -1249,40 +1100,27 @@ local gemino = {
 						},
 					},
 				},
-			} or nil,
-		}
-	end,
-	update = function(self, card, front)
-		if G.STAGE == G.STAGES.RUN then
-			other_joker = G.jokers.cards[1]
-			if other_joker and other_joker ~= card and not (Card.no(other_joker, "immutable", true)) then
-				card.ability.blueprint_compat = "compatible"
-			else
-				card.ability.blueprint_compat = "incompatible"
-			end
+			}
+			return { main_end = main_end }
 		end
 	end,
-	calculate = function(self, card2, context)
-		if (context.end_of_round and not context.repetition and not context.individual) or context.forcetrigger then
+	calculate = function(self, card, context)
+		if (context.end_of_round and context.main_eval) or context.forcetrigger then
 			local check = false
-			local card = G.jokers.cards[1]
-			if not Card.no(G.jokers.cards[1], "immutable", true) then
-				Cryptid.manipulate(G.jokers.cards[1], { value = 2 })
+			local other = card.area.cards[1]
+			if other and other ~= card and not Card.no(other, "immutable", true) then
+				Cryptid.manipulate(other, { value = 2 })
 				check = true
 			end
 			if check then
-				card_eval_status_text(
-					context.blueprint_card or card2,
-					"extra",
-					nil,
-					nil,
-					nil,
-					{ message = localize("k_upgrade_ex"), colour = G.C.GREEN }
-				)
+				return {
+					message = localize("k_upgrade_ex"),
+					colour = G.C.GREEN,
+				}
 			end
-			return nil, true
 		end
 	end,
+	attributes = { "value_manip", "modify_card", "position" },
 }
 local energia = {
 	dependencies = {
@@ -1320,7 +1158,7 @@ local energia = {
 			-- Don't add tags if there are more then 40 (lag)
 			local added_tags =
 				math.max(math.min(card.ability.immutable.max_tags - #G.GAME.tags, card.ability.extra.tags), 0)
-			print(added_tags)
+			--print(added_tags)
 			if added_tags > 0 then
 				for i = 1, added_tags do
 					local ab = copy_table(context.tag_added.ability)
@@ -1344,6 +1182,7 @@ local energia = {
 					colour = G.C.DARK_EDITION,
 				},
 			})
+			return nil, true
 		elseif context.forcetrigger then
 			SMODS.scale_card(card, {
 				ref_table = card.ability.extra,
@@ -1351,6 +1190,7 @@ local energia = {
 				scalar_value = "tag_mod",
 				no_message = true,
 			})
+			return nil, true
 		end
 	end,
 	cry_credits = {
@@ -1358,8 +1198,9 @@ local energia = {
 		art = { "unexian" },
 		code = { "Math" },
 	},
+	attributes = { "scaling", "tag", "generation" },
 }
---why is this an exotic???
+--why is this an exotic??? because it fucking peak
 local verisimile = {
 	dependencies = {
 		items = {
@@ -1432,6 +1273,7 @@ local verisimile = {
 		art = { "Tatteredlurker" },
 		code = { "Jevonn", "invalidOS" },
 	},
+	attributes = { "xmult", "scaling" },
 }
 local duplicare = {
 	dependencies = {
@@ -1476,6 +1318,7 @@ local duplicare = {
 				ref_value = "Xmult",
 				scalar_value = "Xmult_mod",
 			})
+			return nil, true
 		end
 		if (context.joker_main and (to_big(card.ability.extra.Xmult) > to_big(1))) or context.forcetrigger then
 			if context.forcetrigger then
@@ -1487,15 +1330,7 @@ local duplicare = {
 				})
 			end
 			return {
-				message = localize({
-					type = "variable",
-					key = "a_xmult",
-					vars = {
-						number_format(card.ability.extra.Xmult),
-					},
-				}),
-				Xmult_mod = lenient_bignum(card.ability.extra.Xmult),
-				colour = G.C.MULT,
+				xmult = lenient_bignum(card.ability.extra.Xmult),
 			}
 		end
 	end,
@@ -1504,6 +1339,7 @@ local duplicare = {
 		art = { "Shellular" },
 		code = { "elial2" },
 	},
+	attributes = { "xmult", "scaling" },
 }
 -- to be honest, this needs a refactor because
 -- rescribed jokers are forgotten on save reload
@@ -1639,15 +1475,7 @@ local formidiulosus = {
 		end
 		if context.cardarea == G.jokers and (to_big(card.ability.extra.Emult) > to_big(1)) and context.joker_main then
 			return {
-				message = localize({
-					type = "variable",
-					key = "a_powmult",
-					vars = {
-						number_format(card.ability.extra.Emult),
-					},
-				}),
-				Emult_mod = lenient_bignum(card.ability.extra.Emult),
-				colour = G.C.DARK_EDITION,
+				emult = lenient_bignum(card.ability.extra.Emult),
 			}
 		end
 		if context.forcetrigger then
@@ -1658,15 +1486,7 @@ local formidiulosus = {
 				G.jokers:emplace(card)
 			end
 			return {
-				message = localize({
-					type = "variable",
-					key = "a_powmult",
-					vars = {
-						number_format(card.ability.extra.Emult),
-					},
-				}),
-				Emult_mod = lenient_bignum(card.ability.extra.Emult),
-				colour = G.C.DARK_EDITION,
+				emult = lenient_bignum(card.ability.extra.Emult),
 			}
 		end
 	end,
@@ -1675,6 +1495,7 @@ local formidiulosus = {
 		art = { "Foegro", "hydro" },
 		code = { "Foegro" },
 	},
+	attributes = { "generation", "joker", "emult", "rarity" },
 }
 local caeruleum = {
 	dependencies = {

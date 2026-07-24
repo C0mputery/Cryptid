@@ -408,27 +408,8 @@ end
 --has to be modified with new enabling system
 if Cryptid_config.menu then
 	local oldfunc = Game.main_menu
-	Game.main_menu = function(change_context)
-		local ret = oldfunc(change_context)
-		-- adds a Cryptid spectral to the main menu
-		local newcard = Card(
-			G.title_top.T.x,
-			G.title_top.T.y,
-			G.CARD_W,
-			G.CARD_H,
-			G.P_CARDS.empty,
-			G.P_CENTERS.c_cryptid,
-			{ bypass_discovery_center = true }
-		)
-		-- recenter the title
-		G.title_top.T.w = G.title_top.T.w * 1.7675
-		G.title_top.T.x = G.title_top.T.x - 0.8
-		G.title_top:emplace(newcard)
-		-- make the card look the same way as the title screen Ace of Spades
-		newcard.T.w = newcard.T.w * 1.1 * 1.2
-		newcard.T.h = newcard.T.h * 1.1 * 1.2
-		newcard.no_ui = true
-		newcard.states.visible = false
+	function Game:main_menu(change_context)
+		local ret = oldfunc(self, change_context)
 
 		-- make the title screen use different background colors
 		G.SPLASH_BACK:define_draw_steps({
@@ -443,24 +424,15 @@ if Cryptid_config.menu then
 			},
 		})
 
-		G.E_MANAGER:add_event(Event({
-			trigger = "after",
-			delay = 0,
-			blockable = false,
-			blocking = false,
-			func = function()
-				if change_context == "splash" then
-					newcard.states.visible = true
-					newcard:start_materialize({ G.C.WHITE, G.C.WHITE }, true, 2.5)
-				else
-					newcard.states.visible = true
-					newcard:start_materialize({ G.C.WHITE, G.C.WHITE }, nil, 1.2)
-				end
-				return true
-			end,
-		}))
-
 		return ret
+	end
+	SMODS.current_mod.menu_cards = function()
+		return {
+			{ key = "c_cryptid" },
+			func = function()
+				G.title_top.cards[1]:set_edition("e_cry_glitched", true, true)
+			end,
+		}
 	end
 end
 
@@ -965,6 +937,7 @@ function Card:is_food()
 end
 
 function Cryptid.get_highlighted_cards(areas, ignore, min, max, blacklist, seed)
+	ignore = ignore or {} --easiest fix lmao
 	ignore.checked = true
 	blacklist = blacklist or function()
 		return true
@@ -1167,6 +1140,20 @@ function create_UIBox_exploit()
 	})
 end
 
+G.FUNCS.cancel_overlay_menu_code = function(e)
+	G.FUNCS.exit_overlay_menu(e)
+	G.GAME.USING_CLASS = nil
+	G.GAME.USING_CODE = nil
+	G.GAME.USING_VARIABLE = nil
+	G.GAME.USING_EXPLOIT_HAND = nil
+	G.GAME.USING_EXPLOIT = nil
+	G.GAME.USING_POINTER = nil
+	G.GAME.POINTER_SUBMENU = nil
+	G.GAME.POINTER_PLAYING = nil
+	G.GAME.POINTER_COLLECTION = nil
+	G.GAME.CODE_DESTROY_CARD = nil
+end
+
 G.FUNCS.exit_overlay_menu_code = function(e)
 	G.FUNCS.exit_overlay_menu(e)
 	G.GAME.USING_CLASS = nil
@@ -1178,15 +1165,11 @@ G.FUNCS.exit_overlay_menu_code = function(e)
 	G.GAME.POINTER_SUBMENU = nil
 	G.GAME.POINTER_PLAYING = nil
 	G.GAME.POINTER_COLLECTION = nil
-	if
-		G.GAME.CODE_DESTROY_CARD
-		and G.GAME.CODE_DESTROY_CARD.ability
-		and G.GAME.CODE_DESTROY_CARD.ability.cry_multiuse
-	then
-		G.GAME.CODE_DESTROY_CARD.ability.cry_multiuse = G.GAME.CODE_DESTROY_CARD.ability.cry_multiuse - 1
-	elseif G.GAME.CODE_DESTROY_CARD then
-		G.GAME.CODE_DESTROY_CARD:start_dissolve()
-		G.GAME.CODE_DESTROY_CARD = nil
+	local card = G.GAME.CODE_DESTROY_CARD
+	if card and card.ability and card.ability.cry_multiuse and to_big(card.ability.cry_multiuse) > to_big(1) then
+		card.ability.cry_multiuse = card.ability.cry_multiuse - 1
+	elseif card then
+		card:start_dissolve()
 	end
 	G.GAME.CODE_DESTROY_CARD = nil
 end
@@ -1452,6 +1435,9 @@ function Cryptid.isNonRollProbabilityContext(context)
 			return context.from_roll
 		end
 	end
+	if context.check_enhancement then
+		return false
+	end --unintuitive to players and gets called outside of actual "triggers" a lot
 
 	return true
 end

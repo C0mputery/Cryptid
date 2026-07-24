@@ -38,6 +38,7 @@ local very_fair = {
 			unlock_card(self)
 		end
 	end,
+	attributes = { "discard", "hands", "voucher" },
 }
 local equilibrium = {
 	object_type = "Back",
@@ -73,6 +74,7 @@ local equilibrium = {
 			unlock_card(self)
 		end
 	end,
+	attributes = { "shop", "voucher" },
 }
 local misprint = {
 	object_type = "Back",
@@ -108,6 +110,7 @@ local misprint = {
 			unlock_card(self)
 		end
 	end,
+	attributes = { "value_manip" },
 }
 local infinite = {
 	object_type = "Back",
@@ -148,6 +151,7 @@ local infinite = {
 			unlock_card(self)
 		end
 	end,
+	attributes = { "hand_size", "play_limit", "discard_limit" },
 }
 local conveyor = {
 	object_type = "Back",
@@ -176,6 +180,7 @@ local conveyor = {
 			unlock_card(self)
 		end
 	end,
+	attributes = { "generation", "destroy_card", "joker", "position" },
 }
 local CCD = {
 	object_type = "Back",
@@ -205,6 +210,7 @@ local CCD = {
 			unlock_card(self)
 		end
 	end,
+	attributes = { "ccd" },
 }
 local wormhole = {
 	object_type = "Back",
@@ -257,6 +263,7 @@ local wormhole = {
 			unlock_card(self)
 		end
 	end,
+	attributes = { "joker_slot", "joker", "edition", "rarity" },
 }
 local redeemed = {
 	object_type = "Back",
@@ -309,6 +316,11 @@ local redeemed = {
 									G.cry_redeemed_buffer = {}
 								end
 								if not G.cry_redeemed_buffer[v.key] and v.unlocked then
+									for _, a in ipairs(G.I.CARDAREA) do --nested in here so it only does this when actually necessary
+										if a.handle_card_limit then
+											a:handle_card_limit()
+										end
+									end
 									local card = create_card("Voucher", area, nil, nil, nil, nil, v.key)
 									G.cry_redeemed_buffer[v.key] = true
 									card:start_materialize()
@@ -348,6 +360,7 @@ local redeemed = {
 			unlock_card(self)
 		end
 	end,
+	attributes = { "voucher", "generation" },
 }
 local legendary = {
 	object_type = "Back",
@@ -439,6 +452,7 @@ local legendary = {
 			unlock_card(self)
 		end
 	end,
+	attributes = { "chance", "generation", "joker", "rarity" },
 }
 local critical = {
 	object_type = "Back",
@@ -501,7 +515,7 @@ local critical = {
 			delay(0.6)
 			if check then
 				return {
-					Emult_mod = check,
+					emult = check,
 					colour = G.C.DARK_EDITION,
 				}
 			end
@@ -524,6 +538,7 @@ local critical = {
 			unlock_card(self)
 		end
 	end,
+	attributes = { "emult", "chance" },
 }
 local glowing = {
 	object_type = "Back",
@@ -565,6 +580,7 @@ local glowing = {
 			unlock_card(self)
 		end
 	end,
+	attributes = { "modify_card", "jokers", "value_manip" },
 }
 local beta = {
 	object_type = "Back",
@@ -596,6 +612,7 @@ local beta = {
 			unlock_card(self)
 		end
 	end,
+	attributes = { "joker_slot", "consumable_slot", "boss_blind" },
 }
 local bountiful = {
 	object_type = "Back",
@@ -660,6 +677,7 @@ local beige = {
 			unlock_card(self)
 		end
 	end,
+	attributes = { "joker", "value_manip", "rarity" },
 }
 local blank = {
 	object_type = "Back",
@@ -717,6 +735,10 @@ local antimatter = {
 	init = function(self)
 		function Cryptid.antimatter_apply(skip, custom)
 			local function check(back)
+				--never apply disabled content
+				if Cryptid.enabled(back) ~= true then
+					return false
+				end
 				-- Check if deck was won on Gold stake or if gameset is madness
 				if
 					(Cryptid.safe_get(G.PROFILES, G.SETTINGS.profile, "deck_usage", back, "wins", 8) or 0 ~= 0) or skip
@@ -926,9 +948,49 @@ local antimatter = {
 			if check("b_cry_beige") then
 				G.GAME.modifiers.cry_common_value_quad = true
 			end
+			--Modifier Decks
+			local ed_deck, et_deck, sl_deck = check("b_cry_e_deck"), check("b_cry_et_deck"), check("b_cry_sl_deck")
+			local ed, enh, _, _, seal = Cryptid.enhanced_deck_info({})
+			if ed_deck then
+				G.GAME.modifiers.cry_force_edition = ed
+			end
+			if et_deck then
+				G.GAME.modifiers.cry_force_enhancement = enh
+			end
+			if sl_deck then
+				G.GAME.modifiers.cry_force_seal = seal
+			end
+			if ed_deck or et_deck or sl_deck then
+				G.E_MANAGER:add_event(Event({
+					func = function(n)
+						for _, c in ipairs(G.playing_cards) do
+							if ed_deck then
+								c:set_edition(ed, true, true)
+							end
+							if et_deck then
+								c:set_ability(enh)
+							end
+							if sl_deck then
+								c:set_seal(seal, true, true)
+							end
+						end
+						return true
+					end,
+				}))
+			end
+			--Mod Compat
+			for _, v in ipairs(G.P_CENTER_POOLS.Back) do
+				if v.cry_antimatter_apply and check(v.key) then
+					v:cry_antimatter_apply()
+				end
+			end
 		end
 		function Cryptid.antimatter_trigger(self, context, skip, custom)
 			local function check(back)
+				--never apply disabled content
+				if Cryptid.enabled(back) ~= true then
+					return false
+				end
 				-- Check if deck was won on Gold stake or if gameset is madness
 				if
 					(Cryptid.safe_get(G.PROFILES, G.SETTINGS.profile, "deck_usage", back, "wins", 8) or 0 ~= 0) or skip
@@ -940,7 +1002,8 @@ local antimatter = {
 				end
 				return false
 			end
-			if context.context == "final_scoring_step" then
+			local rets = {}
+			if context.final_scoring_step then
 				--Critical Deck
 				if check("b_cry_critical") then
 					if
@@ -952,81 +1015,15 @@ local antimatter = {
 							"Antimatter Deck"
 						)
 					then
-						context.mult = context.mult ^ 2
-						update_hand_text({ delay = 0 }, { mult = context.mult, chips = context.chips })
-						G.E_MANAGER:add_event(Event({
-							func = function()
-								play_sound("talisman_emult", 1)
-								attention_text({
-									scale = 1.4,
-									text = localize("cry_critical_hit_ex"),
-									hold = 4,
-									align = "cm",
-									offset = { x = 0, y = -1.7 },
-									major = G.play,
-								})
-								return true
-							end,
-						}))
-						delay(0.6)
+						rets[#rets + 1] = { emult = 2 }
 					end
 				end
 				--Plasma Deck
-				local tot = context.chips + context.mult
 				if check("b_plasma") then
-					context.chips = math.floor(tot / 2)
-					context.mult = math.floor(tot / 2)
-					update_hand_text({ delay = 0 }, { mult = context.mult, chips = context.chips })
-
-					G.E_MANAGER:add_event(Event({
-						func = function()
-							local text = localize("k_balanced")
-							play_sound("gong", 0.94, 0.3)
-							play_sound("gong", 0.94 * 1.5, 0.2)
-							play_sound("tarot1", 1.5)
-							ease_colour(G.C.UI_CHIPS, { 0.8, 0.45, 0.85, 1 })
-							ease_colour(G.C.UI_MULT, { 0.8, 0.45, 0.85, 1 })
-							attention_text({
-								scale = 1.4,
-								text = text,
-								hold = 2,
-								align = "cm",
-								offset = { x = 0, y = -2.7 },
-								major = G.play,
-							})
-							G.E_MANAGER:add_event(Event({
-								trigger = "after",
-								blockable = false,
-								blocking = false,
-								delay = 4.3,
-								func = function()
-									ease_colour(G.C.UI_CHIPS, G.C.BLUE, 2)
-									ease_colour(G.C.UI_MULT, G.C.RED, 2)
-									return true
-								end,
-							}))
-							G.E_MANAGER:add_event(Event({
-								trigger = "after",
-								blockable = false,
-								blocking = false,
-								no_delete = true,
-								delay = 6.3,
-								func = function()
-									G.C.UI_CHIPS[1], G.C.UI_CHIPS[2], G.C.UI_CHIPS[3], G.C.UI_CHIPS[4] =
-										G.C.BLUE[1], G.C.BLUE[2], G.C.BLUE[3], G.C.BLUE[4]
-									G.C.UI_MULT[1], G.C.UI_MULT[2], G.C.UI_MULT[3], G.C.UI_MULT[4] =
-										G.C.RED[1], G.C.RED[2], G.C.RED[3], G.C.RED[4]
-									return true
-								end,
-							}))
-							return true
-						end,
-					}))
-
-					delay(0.6)
+					rets[#rets + 1] = { balance = true }
 				end
 			end
-			if context.context == "eval" and Cryptid.safe_get(G.GAME, "last_blind", "boss") then
+			if context.round_eval and Cryptid.safe_get(G.GAME, "last_blind", "boss") then
 				--Glowing Deck
 				if check("b_cry_glowing") then
 					for i = 1, #G.jokers.cards do
@@ -1083,7 +1080,15 @@ local antimatter = {
 					}))
 				end
 			end
-			return context.chips, context.mult
+			--Mod Compat
+			for _, v in ipairs(G.P_CENTER_POOLS.Back) do
+				if v.cry_antimatter_calculate and check(v.key) then
+					rets[#rets + 1] = v:cry_antimatter_calculate(context)
+				end
+			end
+			if next(rets) then
+				return SMODS.merge_effects(rets)
+			end
 		end
 		function Cryptid.get_antimatter_vouchers(voucher_table, skip, custom)
 			-- Create a table or use one that is passed into the function
@@ -1106,6 +1111,10 @@ local antimatter = {
 				end
 			end
 			local function check(back)
+				--never apply disabled content
+				if Cryptid.enabled(back) ~= true then
+					return false
+				end
 				-- Check if deck was won on Gold stake or if gameset is madness
 				if
 					(Cryptid.safe_get(G.PROFILES, G.SETTINGS.profile, "deck_usage", back, "wins", 8) or 0 ~= 0) or skip
@@ -1136,11 +1145,24 @@ local antimatter = {
 				Add_voucher_to_the_table(voucher_table, "v_overstock_norm")
 				Add_voucher_to_the_table(voucher_table, "v_overstock_plus")
 			end
+			for _, v in ipairs(G.P_CENTER_POOLS.Back) do
+				if v.cry_antimatter_vouchers and check(v.key) then
+					v:cry_antimatter_vouchers(voucher_table)
+				end
+			end
+			local clean_table = {}
+			for _, v in ipairs(voucher_table) do
+				Add_voucher_to_the_table(clean_table, v)
+			end
 			return voucher_table
 		end
 		--Does this even need to be a function idk
 		function Cryptid.get_antimatter_consumables(consumable_table, skip, custom)
 			local function check(back)
+				--never apply disabled content
+				if Cryptid.enabled(back) ~= true then
+					return false
+				end
 				-- Check if deck was won on Gold stake or if gameset is madness
 				if
 					(Cryptid.safe_get(G.PROFILES, G.SETTINGS.profile, "deck_usage", back, "wins", 8) or 0 ~= 0) or skip
@@ -1162,6 +1184,11 @@ local antimatter = {
 			if check("b_ghost") then
 				table.insert(consumable_table, "c_hex")
 			end
+			for _, v in ipairs(G.P_CENTER_POOLS.Back) do
+				if v.cry_antimatter_consumables and check(v.key) then
+					v:cry_antimatter_consumables(consumable_table)
+				end
+			end
 			return consumable_table
 		end
 	end,
@@ -1179,6 +1206,7 @@ local antimatter = {
 			unlock_card(self)
 		end
 	end,
+	attributes = { "copying" },
 }
 
 --[[

@@ -52,6 +52,7 @@ local oldhouse = {
 	get_loc_debuff_text = function(self)
 		return localize("cry_debuff_oldhouse")
 	end,
+	attributes = { "hand_type" },
 }
 local oldarm = {
 	dependencies = {
@@ -133,6 +134,7 @@ local oldmanacle = {
 		end
 		return mult, hand_chips, false
 	end,
+	attributes = { "discard" },
 }
 local oldserpent = {
 	dependencies = {
@@ -153,12 +155,13 @@ local oldserpent = {
 	order = 9,
 	boss_colour = HEX("4f6367"),
 	modify_hand = function(self, cards, poker_hands, text, mult, hand_chips)
-		if G.GAME.hands[text].level > to_big(1) then
+		if to_big(G.GAME.hands[text].level) > to_big(1) then
 			G.GAME.blind.triggered = true
 			return math.floor(mult / G.GAME.hands[text].level), hand_chips, true
 		end
 		return mult, hand_chips, false
 	end,
+	attributes = { "hand_type" },
 }
 local oldpillar = {
 	dependencies = {
@@ -188,6 +191,7 @@ local oldpillar = {
 	get_loc_debuff_text = function(self)
 		return localize("cry_debuff_oldpillar")
 	end,
+	attributes = { "hand_type" },
 }
 local oldflint = {
 	dependencies = {
@@ -217,6 +221,7 @@ local oldflint = {
 	get_loc_debuff_text = function(self)
 		return localize("cry_debuff_oldflint")
 	end,
+	attributes = { "hand_type" },
 }
 local oldmark = {
 	dependencies = {
@@ -246,6 +251,7 @@ local oldmark = {
 	get_loc_debuff_text = function(self)
 		return localize("cry_debuff_oldmark")
 	end,
+	attributes = { "hand_type" },
 }
 local tax = {
 	dependencies = {
@@ -331,6 +337,7 @@ local box = {
 		end
 		return false
 	end,
+	attributes = { "debuff", "joker", "rarity" },
 }
 local clock = {
 	dependencies = {
@@ -373,6 +380,7 @@ local clock = {
 			return 0.1 * ((dt * (G.GAME.modifiers.cry_rush_hour_iii or 1)) * math.min(G.SETTINGS.GAMESPEED, 4) / 4) / 3
 		end
 	end,
+	attributes = { "large_blind" },
 }
 local trick = {
 	dependencies = {
@@ -410,6 +418,7 @@ local trick = {
             return true end }))
         end--]]
 	end,
+	attributes = { "face_down" },
 }
 local joke = {
 	dependencies = {
@@ -458,6 +467,7 @@ local joke = {
 			end
 		end
 	end,
+	attributes = { "ante" },
 }
 local hammer = {
 	dependencies = {
@@ -495,6 +505,7 @@ local hammer = {
 			return false
 		end
 	end,
+	attributes = { "debuff", "rank", "ace", "three", "five", "nine" },
 }
 local magic = {
 	dependencies = {
@@ -532,6 +543,7 @@ local magic = {
 			return false
 		end
 	end,
+	attributes = { "debuff", "rank", "two", "four", "six", "eight", "ten" },
 }
 local windmill = {
 	dependencies = {
@@ -557,6 +569,7 @@ local windmill = {
 		end
 		return false
 	end,
+	attributes = { "debuff", "joker", "rarity" },
 }
 local striker = {
 	dependencies = {
@@ -582,6 +595,7 @@ local striker = {
 		end
 		return false
 	end,
+	attributes = { "debuff", "joker", "rarity" },
 }
 local shackle = {
 	dependencies = {
@@ -617,6 +631,7 @@ local shackle = {
 		end
 		return false
 	end,
+	attributes = { "debuff", "joker", "edition" },
 }
 local pin = {
 	dependencies = {
@@ -658,6 +673,7 @@ local pin = {
 		end
 		return false
 	end,
+	attributes = { "debuff", "joker", "rarity" },
 }
 -- Must play 5 cards,
 -- Destroy all played and discarded cards
@@ -686,26 +702,20 @@ local scorch = {
 	},
 	calculate = function(self, blind, context)
 		if
-			context.full_hand
-			and context.destroy_card
+			context.destroy_card
 			and (context.cardarea == G.play or context.cardarea == "unscored")
 			and not G.GAME.blind.disabled
 		then
 			return { remove = not SMODS.is_eternal(context.destroy_card) }
 		end
 		if context.discard and not G.GAME.blind.disabled then
-			for i, card in ipairs(G.hand.highlighted) do
-				return { remove = not SMODS.is_eternal(card) }
-			end
+			return { remove = not SMODS.is_eternal(context.other_card) } --is this check even needed?
 		end
 	end,
 	in_pool = function(self) -- only appears in endless
-		if G.GAME.round_resets.blind_ante > G.GAME.win_ante then
-			return true
-		else
-			return false
-		end
+		return G.GAME.won
 	end,
+	attributes = { "destroy_card", "discard" },
 }
 -- +0.25X blind requirements
 -- for every $5 you have when selected
@@ -863,6 +873,7 @@ local decision = {
 	defeat = function(self, silent)
 		G.GAME.cry_fastened = nil
 	end,
+	attributes = { "joker", "booster", "destroy_card", "banish" }, --destruction is technically the pack but you only ever see the pack in this blind
 }
 
 local repulsor = {
@@ -915,6 +926,7 @@ local repulsor = {
 			end
 		end
 	end,
+	attributes = { "retrigger", "joker" },
 }
 
 local chromatic = {
@@ -936,32 +948,12 @@ local chromatic = {
 	atlas = "blinds_two",
 	order = 25,
 	boss_colour = HEX("a34f98"),
-	set_blind = function(self, reset, silent)
-		G.GAME.chromatic_mod = 0
-		--SMODS.set_scoring_calculation("cry_chromatic")
-	end,
-	defeat = function(self, silent)
-		G.GAME.chromatic_mod = nil
-		--SMODS.set_scoring_calculation("multiply")
-	end,
-	disable = function(self, silent)
-		G.GAME.chromatic_mod = nil
-		--SMODS.set_scoring_calculation("multiply")
-	end,
-	press_play = function(self)
-		if not G.GAME.blind.disabled then
-			G.GAME.blind.prepped = true
+	calculate = function(self, blind, context)
+		if context.final_scoring_step and G.GAME.current_round.hands_played % 2 == 0 then
+			return { xmult = -1 }
 		end
 	end,
-	in_pool = function()
-		return math.floor(G.GAME.round_resets.hands) > 1
-	end,
-	drawn_to_hand = function(self)
-		if G.GAME.blind.prepped and not G.GAME.blind.disabled then
-			G.GAME.chromatic_mod = G.GAME.chromatic_mod + 1
-		end
-		G.GAME.blind.prepped = nil
-	end,
+	attributes = { "hands", "xmult" },
 }
 
 local landlord = {
@@ -1002,6 +994,7 @@ local landlord = {
 			end
 		end
 	end,
+	attributes = { "joker", "modify_card", "sticker", "lose_economy" },
 }
 
 --It seems Showdown blind order is seperate from normal blind collection order? convenient for me at least
@@ -1040,12 +1033,13 @@ local lavender_loop = {
 	cry_round_base_mod = function(self, dt)
 		local aaa = 4 * (G.GAME.modifiers.cry_rush_hour_iii or 1)
 		if
-			G.GAME.cry_ach_conditions.patience_virtue_timer > 0
+			G.GAME.cry_ach_conditions.patience_virtue_timer
+			and G.GAME.cry_ach_conditions.patience_virtue_timer > 0
 			and G.GAME.cry_ach_conditions.patience_virtue_earnable ~= true
 		then
 			G.GAME.cry_ach_conditions.patience_virtue_timer = G.GAME.cry_ach_conditions.patience_virtue_timer
 				- dt * (G.SETTINGS.paused and 0 or 1) * G.SETTINGS.GAMESPEED
-		elseif G.GAME.current_round.hands_played == 0 then
+		elseif G.GAME.current_round.hands_played == 0 and G.GAME.cry_ach_conditions.patience_virtue_timer then
 			G.GAME.cry_ach_conditions.patience_virtue_earnable = true
 		end
 		if G.SETTINGS.paused or G.STATE == G.STATES.HAND_PLAYED then
@@ -1054,6 +1048,7 @@ local lavender_loop = {
 			return 1.25 ^ (dt / (1.5 / math.min(G.SETTINGS.GAMESPEED, 4) * aaa))
 		end
 	end,
+	attributes = { "large_blind" },
 }
 local tornado = {
 	dependencies = {
@@ -1108,6 +1103,7 @@ local tornado = {
 		end
 		return false
 	end,
+	attributes = { "chance" },
 }
 --todo: disable get_local_debuff_text for this
 local vermillion_virus = {
@@ -1161,6 +1157,7 @@ local vermillion_virus = {
 			end
 		end
 	end,
+	attributes = { "joker", "destroy_card", "generation" },
 }
 local sapphire_stamp = {
 	dependencies = {
@@ -1724,6 +1721,7 @@ local obsidian_orb = {
 		end
 		return disp_text
 	end,
+	attributes = { "copying" },
 }
 local trophy = {
 	dependencies = {

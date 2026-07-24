@@ -8,7 +8,7 @@ return {
 	},
 	["family_mode"] = false, -- removes f*ck
 	["experimental"] = false, -- experimental stuff
-	["force_tooltips"] = true, -- i don't actually know what this does
+	["force_tooltips"] = true, -- acivates lovely patch to always show the desc of jokers and stuff
 	["HTTPS"] = true, -- your internet connection
-	["menu"] = true, -- i don't know what this does either
+	["menu"] = true, -- Restart game and the main menu is now blue
 }

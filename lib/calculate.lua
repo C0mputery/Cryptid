@@ -6,6 +6,9 @@ SMODS.current_mod.calculate = function(self, context)
 		G.GAME.blind.chips = G.GAME.blind.chips * (1 - (G.GAME.sundial_amount / 100))
 		G.GAME.blind.chip_text = number_format(G.GAME.blind.chips)
 	end
+	if context.ante_change and SMODS.ante_end then
+		Cryptid.apply_ante_tax()
+	end
 end
 
 -- deal with Rigged and Fragile when scoring a playing card
@@ -108,8 +111,9 @@ end
 
 function Card:calculate_joker(context)
 	local active_side = self
+	--[[
 	if
-		next(find_joker("cry-Flip Side"))
+		next(SMODS.find_card("j_cry_flip_side"))
 		and not context.dbl_side
 		and self.edition
 		and self.edition.cry_double_sided
@@ -128,13 +132,14 @@ function Card:calculate_joker(context)
 			return
 		end
 	end
+	]]
 	if not active_side or active_side.will_shatter then
 		return
 	end
 	if not G.GAME.cry_double_scale then
 		G.GAME.cry_double_scale = { double_scale = true } --doesn't really matter what's in here as long as there's something
 	end
-	local orig_ability = copy_table(active_side.ability)
+	--local orig_ability = copy_table(active_side.ability)
 	local in_context_scaling = false
 	local callback = context.callback
 	if active_side.ability.cry_possessed then

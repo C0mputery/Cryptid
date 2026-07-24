@@ -104,6 +104,7 @@ local jollysus = {
 			"Jevonn",
 		},
 	},
+	attributes = { "generation", "joker" },
 }
 --TODO
 --Fix Incompatiblity with Brainstorm (the joker not the mod)
@@ -205,6 +206,7 @@ local bubblem = {
 			"Jevonn",
 		},
 	},
+	attributes = { "hand_type", "generation", "joker" },
 }
 local foodm = {
 	object_type = "Joker",
@@ -242,13 +244,7 @@ local foodm = {
 	calculate = function(self, card, context)
 		if context.joker_main and (to_big(card.ability.extra.mult) > to_big(0)) then
 			return {
-				message = localize({
-					type = "variable",
-					key = "a_mult",
-					vars = { number_format(card.ability.extra.mult) },
-				}),
-				mult_mod = lenient_bignum(card.ability.extra.mult),
-				colour = G.C.MULT,
+				mult = lenient_bignum(card.ability.extra.mult),
 			}
 		end
 		if
@@ -312,13 +308,7 @@ local foodm = {
 		end
 		if context.forcetrigger then
 			return {
-				message = localize({
-					type = "variable",
-					key = "a_mult",
-					vars = { number_format(card.ability.extra.mult) },
-				}),
-				mult_mod = lenient_bignum(card.ability.extra.mult),
-				colour = G.C.MULT,
+				mult = lenient_bignum(card.ability.extra.mult),
 			}
 		end
 	end,
@@ -333,6 +323,7 @@ local foodm = {
 			"Jevonn",
 		},
 	},
+	attributes = { "mult", "food" },
 }
 local mstack = {
 	object_type = "Joker",
@@ -431,6 +422,7 @@ local mstack = {
 			"Jevonn",
 		},
 	},
+	attributes = { "retrigger", "scaling" },
 }
 local mneon = {
 	dependencies = {
@@ -475,11 +467,18 @@ local mneon = {
 					jollycount = jollycount + 1
 				end
 			end
-			card.ability.extra.money = lenient_bignum(
-				to_big(card.ability.extra.money) + math.max(1, to_big(card.ability.extra.bonus)) * (jollycount or 1)
-			)
-			-- currently can't use SMODS.scale_card unless a for loop is used to trigger scaling once for every jolly joker
-
+			if jollycount ~= 0 then
+				SMODS.scale_card(card, {
+					ref_table = card.ability.extra,
+					ref_value = "money",
+					scalar_value = "bonus",
+					operation = function(ref_table, ref_value, initial, change)
+						ref_table[ref_value] = initial + change * jollycount
+					end,
+					no_message = true,
+				})
+			end
+			-- currently CAN use SMODS.scale_card even if a for loop isn't used to trigger scaling once for every jolly joker
 			return { message = localize("cry_m_ex") }
 		end
 		if context.forcetrigger then
@@ -509,6 +508,7 @@ local mneon = {
 			"Jevonn",
 		},
 	},
+	attributes = { "scaling", "economy" },
 }
 local notebook = {
 	dependencies = {
@@ -579,7 +579,7 @@ local notebook = {
 					card.ability.extra.add = 0
 				end
 
-				G.jokers.config.card_limit = lenient_bignum(G.jokers.config.card_limit + to_big(card.ability.extra.add))
+				G.jokers:change_size(lenient_bignum(to_big(card.ability.extra.add)))
 				card.ability.extra.check = false
 				card.ability.extra.active = localize("cry_inactive")
 				return {
@@ -612,14 +612,14 @@ local notebook = {
 				card.ability.extra.add = 0
 			end
 
-			G.jokers.config.card_limit = lenient_bignum(G.jokers.config.card_limit + to_big(card.ability.extra.add))
+			G.jokers:change_size(lenient_bignum(to_big(card.ability.extra.add)))
 		end
 	end,
 	add_to_deck = function(self, card, from_debuff)
-		G.jokers.config.card_limit = lenient_bignum(G.jokers.config.card_limit + to_big(card.ability.immutable.slots))
+		G.jokers:change_size(lenient_bignum(to_big(card.ability.immutable.slots)))
 	end,
 	remove_from_deck = function(self, card, from_debuff)
-		G.jokers.config.card_limit = lenient_bignum(G.jokers.config.card_limit - to_big(card.ability.immutable.slots))
+		G.jokers:change_size(lenient_bignum(-to_big(card.ability.immutable.slots)))
 	end,
 	cry_credits = {
 		idea = {
@@ -632,6 +632,7 @@ local notebook = {
 			"Jevonn",
 		},
 	},
+	attributes = { "chance", "joker_slot", "scaling" },
 }
 local bonk = {
 	dependencies = {
@@ -694,14 +695,7 @@ local bonk = {
 					}))
 				end
 				return {
-					message = localize({
-						type = "variable",
-						key = "a_chips",
-						vars = {
-							number_format(lenient_bignum(to_big(card.ability.extra.chips) * card.ability.extra.xchips)),
-						},
-					}),
-					chip_mod = lenient_bignum(to_big(card.ability.extra.chips) * card.ability.extra.xchips),
+					chips = lenient_bignum(to_big(card.ability.extra.chips) * card.ability.extra.xchips),
 				}
 			else
 				if not Talisman.config_file.disable_anims then
@@ -713,12 +707,7 @@ local bonk = {
 					}))
 				end
 				return {
-					message = localize({
-						type = "variable",
-						key = "a_chips",
-						vars = { number_format(card.ability.extra.chips) },
-					}),
-					chip_mod = lenient_bignum(card.ability.extra.chips),
+					chips = lenient_bignum(card.ability.extra.chips),
 				}
 			end
 		end
@@ -731,7 +720,7 @@ local bonk = {
 				message_colour = G.C.CHIPS,
 			})
 			return {
-				chip_mod = lenient_bignum(to_big(card.ability.extra.chips) * card.ability.extra.xchips),
+				chips = lenient_bignum(to_big(card.ability.extra.chips) * card.ability.extra.xchips),
 			}
 		end
 	end,
@@ -749,6 +738,7 @@ local bonk = {
 			"Jevonn",
 		},
 	},
+	attributes = { "joker", "chips", "scaling", "hand_type" },
 }
 local loopy = {
 	dependencies = {
@@ -810,6 +800,7 @@ local loopy = {
 			"Jevonn",
 		},
 	},
+	attributes = { "scaling", "reset", "retrigger" }, --why does this reset in a patch lmao
 }
 local scrabble = {
 	dependencies = {
@@ -879,6 +870,7 @@ local scrabble = {
 			"Jevonn",
 		},
 	},
+	attributes = { "chance", "generation", "joker" },
 }
 local sacrifice = {
 	object_type = "Joker",
@@ -1005,6 +997,7 @@ local sacrifice = {
 			"Jevonn",
 		},
 	},
+	attributes = { "spectral", "consumable", "joker", "generation" },
 }
 --TODO: Fix Brainstorm incompatibility (the joker not the mod)
 local reverse = {
@@ -1136,6 +1129,7 @@ local reverse = {
 			"Jevonn",
 		},
 	},
+	attributes = { "discard", "hand_type", "joker", "generation" },
 }
 local doodlem = {
 	object_type = "Joker",
@@ -1211,6 +1205,7 @@ local doodlem = {
 			"Jevonn",
 		},
 	},
+	attributes = { "generation", "consumable", "joker" },
 }
 -- To organize virgo's code a little better
 local function virgoJollies(card)
@@ -1303,12 +1298,10 @@ local virgo = {
 				scalar_value = "bonus",
 			})
 			card:set_cost()
-			if not msg or type(msg) == "string" then
-				card_eval_status_text(card, "extra", nil, nil, nil, {
-					message = msg or localize("k_val_up"),
-					colour = G.C.MONEY,
-				})
-			end
+			return {
+				message = localize("k_val_up"),
+				colour = G.C.MONEY,
+			}
 		elseif context.selling_self and not context.blueprint and not context.retrigger_joker then
 			virgoJollies(card)
 			return nil, true
@@ -1334,6 +1327,7 @@ local virgo = {
 			"Jevonn",
 		},
 	},
+	attributes = { "economy", "generation", "joker", "on_sell", "hand_type", "sell_value" },
 }
 local smallestm = {
 	object_type = "Joker",
@@ -1400,6 +1394,7 @@ local smallestm = {
 			"Jevonn",
 		},
 	},
+	attributes = { "tag", "generation", "hand_type" },
 }
 local biggestm = {
 	object_type = "Joker",
@@ -1440,13 +1435,7 @@ local biggestm = {
 	calculate = function(self, card, context)
 		if (context.joker_main and card.ability.extra.check) or context.forcetrigger then
 			return {
-				message = localize({
-					type = "variable",
-					key = "a_xmult",
-					vars = { number_format(card.ability.extra.x_mult) },
-				}),
-				Xmult_mod = lenient_bignum(card.ability.extra.x_mult),
-				colour = G.C.MULT,
+				xmult = lenient_bignum(card.ability.extra.x_mult),
 			}
 		end
 		if context.cardarea == G.jokers and context.before and not context.blueprint then
@@ -1486,6 +1475,7 @@ local biggestm = {
 			"Kailen",
 		},
 	},
+	attributes = { "xmult", "hand_type" },
 }
 local mprime = {
 	dependencies = {
@@ -1533,6 +1523,7 @@ local mprime = {
 						colour = G.C.DARK_EDITION,
 					},
 				})
+				return nil, true
 			end
 		elseif
 			context.end_of_round
@@ -1571,14 +1562,7 @@ local mprime = {
 					}))
 				end
 				return {
-					message = localize({
-						type = "variable",
-						key = "a_powmult",
-						vars = { number_format(card.ability.extra.mult) },
-					}),
-					Emult_mod = lenient_bignum(card.ability.extra.mult),
-					colour = G.C.DARK_EDITION,
-					card = card,
+					emult = lenient_bignum(card.ability.extra.mult),
 				}
 			end
 		end
@@ -1603,13 +1587,7 @@ local mprime = {
 				end,
 			}))
 			return {
-				message = localize({
-					type = "variable",
-					key = "a_powmult",
-					vars = { number_format(card.ability.extra.mult) },
-				}),
-				Emult_mod = lenient_bignum(card.ability.extra.mult),
-				colour = G.C.DARK_EDITION,
+				emult = lenient_bignum(card.ability.extra.mult),
 			}
 		end
 	end,
@@ -1624,6 +1602,7 @@ local mprime = {
 			"Jevonn",
 		},
 	},
+	attributes = { "emult", "joker", "scaling", "generation" },
 }
 local macabre = {
 	dependencies = {
@@ -1713,6 +1692,7 @@ local macabre = {
 			"SDM_0",
 		},
 	},
+	attributes = { "destroy_card", "generation", "joker" },
 }
 local megg = {
 	dependencies = {
@@ -1795,6 +1775,7 @@ local megg = {
 				jolly_card:add_to_deck()
 				G.jokers:emplace(jolly_card)
 			end
+			return nil, true --?
 		end
 	end,
 	cry_credits = {
@@ -1808,6 +1789,7 @@ local megg = {
 			"SDM_0",
 		},
 	},
+	attributes = { "on_sell", "scaling" },
 }
 local longboi = {
 	dependencies = {
@@ -1821,7 +1803,6 @@ local longboi = {
 		extra = {
 			monster = 1,
 			bonus = 0.75,
-			secret_variable_so_smods_scale_works_correctly = 1,
 		},
 		immutable = { max_bonus = 0.75 }, -- this is technically a minimum but i didn't name the variable
 	},
@@ -1844,7 +1825,7 @@ local longboi = {
 	calculate = function(self, card, context)
 		if context.end_of_round and not context.individual and not context.repetition then
 			card.ability.extra.bonus = math.max(card.ability.extra.bonus, card.ability.immutable.max_bonus) -- maybe remove this entirely
-			local msg = SMODS.scale_card(card, {
+			SMODS.scale_card(card, {
 				ref_table = G.GAME,
 				ref_value = "monstermult",
 				scalar_table = card.ability.extra,
@@ -1853,14 +1834,10 @@ local longboi = {
 					message = localize("cry_m_ex"),
 				},
 			})
+			return nil, true
 		elseif context.joker_main and to_big(card.ability.extra.monster) > to_big(1) then
 			return {
-				message = localize({
-					type = "variable",
-					key = "a_xmult",
-					vars = { number_format(card.ability.extra.monster) },
-				}),
-				Xmult_mod = lenient_bignum(card.ability.extra.monster),
+				xmult = lenient_bignum(card.ability.extra.monster),
 			}
 		end
 		if context.forcetrigger then
@@ -1873,16 +1850,14 @@ local longboi = {
 				no_message = true,
 			})
 			return {
-				message = localize({
-					type = "variable",
-					key = "a_xmult",
-					vars = { number_format(card.ability.extra.monster) },
-				}),
-				Xmult_mod = lenient_bignum(card.ability.extra.monster),
+				xmult = lenient_bignum(card.ability.extra.monster),
 			}
 		end
 	end,
 	set_ability = function(self, card, initial, delay_sprites)
+		if card.cry_flipping then
+			return
+		end
 		local aaa = lenient_bignum(G.GAME and G.GAME.monstermult or 1)
 		if (Cryptid.safe_get(card, "area", "config", "type") or "") == "title" then
 			card.ability.extra.monster = aaa
@@ -1911,6 +1886,7 @@ local longboi = {
 			"Jevonn",
 		},
 	},
+	attributes = { "scaling", "xmult" }, -- unsure
 }
 local ret_items = {
 	jollysus,

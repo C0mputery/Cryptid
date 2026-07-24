@@ -305,7 +305,7 @@ function Card:set_ability(center, initial, delay_sprites)
 		end
 	end
 end
-
+--[[
 local updateref = Card.update
 function Card:update(dt)
 	updateref(self, dt)
@@ -329,7 +329,7 @@ function Card:update(dt)
 		self.ability.pinned = true
 	end
 end
-
+]]
 local setdebuffref = Card.set_debuff
 function Card:set_debuff(should_debuff)
 	local is_debuffed = self.debuff
@@ -738,7 +738,7 @@ SMODS.Sticker({
 			and not context.playing_card_end_of_round
 			and not context.individual
 		then
-			if card.ability.set == "Voucher" then
+			if card.ability.set == "Voucher" and not card.display_only then
 				if
 					SMODS.pseudorandom_probability(
 						card,
@@ -765,6 +765,7 @@ SMODS.Sticker({
 					end
 
 					local _card = copy_card(card)
+					_card.display_only = true
 					_card.ability.extra = copy_table(card.ability.extra)
 					if _card.facing == "back" then
 						_card:flip()
